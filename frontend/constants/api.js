@@ -1,0 +1,63 @@
+// API Base URL - Change based on environment
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+
+// Auth Endpoints
+export const AUTH_ENDPOINTS = {
+  // Reader Auth
+  READER_SIGNUP: '/auth/reader/signup',
+  READER_VERIFY_SIGNUP: '/auth/reader/verify-signup',
+  READER_LOGIN: '/auth/reader/login',
+  READER_FORGOT_PASSWORD: '/auth/reader/forgot-password',
+  READER_VERIFY_RESET_OTP: '/auth/reader/verify-reset-otp',
+  READER_RESET_PASSWORD: '/auth/reader/reset-password',
+  READER_UPDATE_PASSWORD: '/auth/reader/update-password',
+  READER_PROFILE: '/auth/reader/profile',
+
+  // Publisher Auth
+  PUBLISHER_SIGNUP: '/auth/publisher/signup',
+  PUBLISHER_VERIFY_SIGNUP: '/auth/publisher/verify-signup',
+  PUBLISHER_LOGIN: '/auth/publisher/login',
+  PUBLISHER_FORGOT_PASSWORD: '/auth/publisher/forgot-password',
+  PUBLISHER_VERIFY_RESET_OTP: '/auth/publisher/verify-reset-otp',
+  PUBLISHER_RESET_PASSWORD: '/auth/publisher/reset-password',
+  PUBLISHER_UPDATE_PASSWORD: '/auth/publisher/update-password',
+  PUBLISHER_PROFILE: '/auth/publisher/profile',
+
+  // Admin Auth
+  ADMIN_LOGIN: '/auth/admin/login',
+  ADMIN_FORGOT_PASSWORD: '/auth/admin/forgot-password',
+  ADMIN_VERIFY_RESET_OTP: '/auth/admin/verify-reset-otp',
+  ADMIN_RESET_PASSWORD: '/auth/admin/reset-password',
+  ADMIN_UPDATE_PASSWORD: '/auth/admin/update-password',
+  ADMIN_PROFILE: '/auth/admin/profile',
+
+  // Health Check
+  HEALTH: '/health',
+};
+
+// User Types
+export const USER_TYPES = {
+  READER: 'reader',
+  PUBLISHER: 'publisher',
+  ADMIN: 'admin',
+};
+
+// Error Messages
+export const ERROR_MESSAGES = {
+  NETWORK_ERROR: 'Network error. Please check your connection.',
+  VALIDATION_ERROR: 'Please fill in all required fields correctly.',
+  AUTH_ERROR: 'Authentication failed. Please try again.',
+  SERVER_ERROR: 'Server error. Please try again later.',
+  OTP_EXPIRED: 'OTP has expired. Please request a new one.',
+  INVALID_OTP: 'Invalid OTP. Please check and try again.',
+};
+
+// Success Messages
+export const SUCCESS_MESSAGES = {
+  SIGNUP_OTP_SENT: 'OTP sent to your email. Please verify.',
+  OTP_VERIFIED: 'Email verified successfully!',
+  LOGIN_SUCCESS: 'Login successful!',
+  PASSWORD_RESET_SUCCESS: 'Password reset successfully!',
+  PASSWORD_UPDATE_SUCCESS: 'Password updated successfully!',
+  PROFILE_UPDATE_SUCCESS: 'Profile updated successfully!',
+};
