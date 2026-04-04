@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   readerForgotPassword,
   readerVerifyResetOTP,
@@ -26,6 +27,7 @@ export default function ResetPasswordForm({
 
   const dispatch = useDispatch();
   const { isLoading } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   const validateEmail = () => {
     const newErrors = {};
@@ -63,11 +65,11 @@ export default function ResetPasswordForm({
       const response = await dispatch(
         readerForgotPassword({ email })
       ).unwrap();
-      toast.success(response.message || 'OTP sent to your email');
+      toast.success(response.message || t('auth.otpSent'));
       setStep('otp');
       setErrors({});
     } catch (err) {
-      toast.error(err?.message || 'Failed to send OTP');
+      toast.error(err?.message || t('auth.otpFailed'));
     }
   };
 
@@ -79,11 +81,11 @@ export default function ResetPasswordForm({
       const response = await dispatch(
         readerVerifyResetOTP({ email, otp })
       ).unwrap();
-      toast.success(response.message || 'OTP verified successfully');
+      toast.success(response.message || t('auth.success'));
       setStep('newPassword');
       setErrors({});
     } catch (err) {
-      toast.error(err?.message || 'Invalid OTP');
+      toast.error(err?.message || t('auth.otpFailed'));
     }
   };
 
@@ -95,10 +97,10 @@ export default function ResetPasswordForm({
       const response = await dispatch(
         readerResetPassword({ email, newPassword })
       ).unwrap();
-      toast.success(response.message || 'Password reset successfully');
+      toast.success(response.message || t('auth.success'));
       if (onSuccess) onSuccess();
     } catch (err) {
-      toast.error(err?.message || 'Failed to reset password');
+      toast.error(err?.message || t('auth.error'));
     }
   };
 
@@ -116,11 +118,11 @@ export default function ResetPasswordForm({
       }} className="space-y-5">
         <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5">
           <p className="text-sm font-medium text-slate-700">
-            Reset your password
+            {t('auth.resetPassword')}
             <span className="mt-1 block text-xs font-normal text-slate-500">
-              {step === 'email' && 'Enter your email address'}
-              {step === 'otp' && 'Enter the OTP sent to your email'}
-              {step === 'newPassword' && 'Create a new password'}
+              {step === 'email' && t('auth.email')}
+              {step === 'otp' && t('auth.otpDescription')}
+              {step === 'newPassword' && t('auth.newPassword')}
             </span>
           </p>
         </div>
@@ -128,7 +130,7 @@ export default function ResetPasswordForm({
         {/* Step 1: Email */}
         {step === 'email' && (
           <Input
-            label="Email Address"
+            label={t('auth.email')}
             type="email"
             value={email}
             onChange={(e) => {
@@ -146,11 +148,11 @@ export default function ResetPasswordForm({
           <>
             <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
               <p className="text-xs text-blue-700 font-medium">
-                OTP sent to <span className="font-bold">{email}</span>
+                {t('auth.otpSent')} <span className="font-bold">{email}</span>
               </p>
             </div>
             <Input
-              label="Enter OTP"
+              label={t('auth.enterOtp')}
               type="text"
               value={otp}
               onChange={(e) => {
@@ -170,7 +172,7 @@ export default function ResetPasswordForm({
         {step === 'newPassword' && (
           <>
             <Input
-              label="New Password"
+              label={t('auth.newPassword')}
               type="password"
               value={newPassword}
               onChange={(e) => {
@@ -182,7 +184,7 @@ export default function ResetPasswordForm({
               required
             />
             <Input
-              label="Confirm Password"
+              label={t('auth.confirmPassword')}
               type="password"
               value={confirmPassword}
               onChange={(e) => {

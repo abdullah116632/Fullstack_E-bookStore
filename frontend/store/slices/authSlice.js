@@ -104,6 +104,11 @@ export const publisherVerifySignup = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const response = await publisherAuthService.verifySignup(data);
+      if (response.data?.data?.token) {
+        localStorage.setItem('authToken', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        localStorage.setItem('userType', 'publisher');
+      }
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Verification failed' });
@@ -188,6 +193,18 @@ const authSlice = createSlice({
       localStorage.removeItem('user');
       localStorage.removeItem('userType');
     },
+    restoreAuthFromStorage: (state) => {
+      const authToken = localStorage.getItem('authToken');
+      const user = localStorage.getItem('user');
+      const userType = localStorage.getItem('userType');
+      
+      if (authToken && user) {
+        state.authToken = authToken;
+        state.user = JSON.parse(user);
+        state.userType = userType;
+        state.isAuthenticated = true;
+      }
+    },
     clearError: (state) => {
       state.error = null;
     },
@@ -196,6 +213,12 @@ const authSlice = createSlice({
     },
     setSignupEmail: (state, action) => {
       state.signupEmail = action.payload;
+    },
+    setAuthUser: (state, action) => {
+      state.user = action.payload;
+      if (action.payload) {
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      }
     },
   },
   extraReducers: (builder) => {
@@ -293,6 +316,12 @@ const authSlice = createSlice({
       })
       .addCase(publisherVerifySignup.fulfilled, (state, action) => {
         state.isLoading = false;
+        if (action.payload?.data?.token) {
+          state.isAuthenticated = true;
+          state.user = action.payload.data.user;
+          state.userType = 'publisher';
+          state.authToken = action.payload.data.token;
+        }
         state.message = action.payload.message;
         state.signupEmail = null;
       })
@@ -341,5 +370,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError, clearMessage, setSignupEmail } = authSlice.actions;
+export const { logout, clearError, clearMessage, setSignupEmail, setAuthUser, restoreAuthFromStorage } = authSlice.actions;
 export default authSlice.reducer;

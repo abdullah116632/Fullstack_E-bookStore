@@ -6,7 +6,11 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { IoBook, IoArrowBack, IoEye, IoDownload, IoStarHalf } from 'react-icons/io5';
+import Navbar from '@/components/common/Navbar';
+import Footer from '@/components/common/Footer';
+import AuthDrawer from '@/components/auth/AuthDrawer';
 import Button from '@/components/common/Button';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Dummy data - Replace with real API call
 const PURCHASED_BOOKS = [
@@ -44,25 +48,88 @@ export default function ActiveBooksPage() {
   const { isAuthenticated, user, userType } = useSelector((state) => state.auth);
   const [books, setBooks] = useState(PURCHASED_BOOKS);
   const [loading, setLoading] = useState(false);
+  const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
+  const [authUserType, setAuthUserType] = useState('reader');
+  const [authFormType, setAuthFormType] = useState('login');
+  const [isChecking, setIsChecking] = useState(true);
+  const { t } = useTranslation();
 
-  // Redirect if not authenticated or not a reader
+  // Check authentication on mount
   useEffect(() => {
-    if (!isAuthenticated || userType !== 'reader') {
-      toast.error('Please login as a reader to access this page');
-      router.push('/');
-    }
-  }, [isAuthenticated, userType, router]);
+    // Check if user data exists in Redux or localStorage
+    const checkAuth = async () => {
+      try {
+        setIsChecking(true);
+        
+        // First check Redux state
+        if (isAuthenticated && userType === 'reader') {
+          setIsChecking(false);
+          return;
+        }
+
+        // Then check localStorage
+        const authToken = localStorage.getItem('authToken');
+        const storedUserType = localStorage.getItem('userType');
+        
+        if (authToken && storedUserType === 'reader') {
+          // Auth exists in localStorage, it will be restored
+          setIsChecking(false);
+          return;
+        }
+
+        // No authentication found
+        const isIntentionalLogout = sessionStorage.getItem('intentionalLogout') === '1';
+        if (isIntentionalLogout) {
+          sessionStorage.removeItem('intentionalLogout');
+        } else {
+          toast.error('Please login as a reader to access this page');
+        }
+        router.push('/');
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkAuth();
+  }, [isAuthenticated, userType, router, t]);
+
+  const handleLoginClick = () => {
+    setAuthUserType('reader');
+    setAuthFormType('login');
+    setAuthDrawerOpen(true);
+  };
+
+  const handleSignupClick = () => {
+    setAuthUserType('reader');
+    setAuthFormType('signup');
+    setAuthDrawerOpen(true);
+  };
+
+  const handleEditProfile = () => {
+    setAuthFormType('updateProfile');
+    setAuthDrawerOpen(true);
+  };
+
+  const handleUpdatePassword = () => {
+    setAuthFormType('updatePassword');
+    setAuthDrawerOpen(true);
+  };
+
+  const handleChangeEmail = () => {
+    setAuthFormType('changeEmail');
+    setAuthDrawerOpen(true);
+  };
 
   const handleReadBook = (bookId) => {
-    toast.success('Opening book reader...');
+    toast.success(t('myBooks.openBookReader'));
     // TODO: Implement actual book reader functionality
   };
 
   const handleDownloadBook = (bookId) => {
-    toast.loading('Downloading book...');
+    toast.loading(t('myBooks.downloadingBook'));
     setTimeout(() => {
       toast.dismiss();
-      toast.success('Book downloaded successfully!');
+      toast.success(t('myBooks.bookDownloaded'));
     }, 2000);
   };
 
@@ -82,9 +149,41 @@ export default function ActiveBooksPage() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
   };
 
+  // Show loading while checking authentication
+  if (isChecking) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar
+          onLoginClick={handleLoginClick}
+          onSignupClick={handleSignupClick}
+          onEditProfile={handleEditProfile}
+          onUpdatePassword={handleUpdatePassword}
+          onChangeEmail={handleChangeEmail}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-teal-600" />
+            <p className="mt-4 text-slate-600">{t('common.loading')}</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-transparent pt-8 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col min-h-screen">
+      <Navbar
+        onLoginClick={handleLoginClick}
+        onSignupClick={handleSignupClick}
+        onEditProfile={handleEditProfile}
+        onUpdatePassword={handleUpdatePassword}
+        onChangeEmail={handleChangeEmail}
+      />
+
+      <main className="relative flex-1 overflow-hidden bg-transparent pt-8 pb-16">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-90 bg-linear-to-b from-slate-900 via-slate-800 to-transparent" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -93,9 +192,9 @@ export default function ActiveBooksPage() {
         >
           <button
             onClick={() => router.push('/')}
-            className="mb-6 flex items-center gap-2 text-sm font-medium text-teal-600 transition-colors hover:text-teal-700"
+            className="mb-6 flex items-center gap-2 text-sm font-medium text-cyan-100 transition-colors hover:text-white"
           >
-            <IoArrowBack /> Back to Home
+            <IoArrowBack /> {t('myBooks.backToHome')}
           </button>
 
           <div className="space-y-2">
@@ -103,12 +202,12 @@ export default function ActiveBooksPage() {
               <div className="rounded-xl bg-linear-to-br from-teal-600 to-cyan-600 p-3">
                 <IoBook className="text-2xl text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-slate-900">
-                My Books
+              <h1 className="text-4xl font-bold text-white">
+                {t('myBooks.title')}
               </h1>
             </div>
-            <p className="text-slate-600">
-              You have {books.length} book{books.length !== 1 ? 's' : ''} in your library
+            <p className="text-slate-200/95">
+              {t('myBooks.subtitle')} {books.length} {books.length !== 1 ? t('myBooks.plural') : t('myBooks.singular')} {t('myBooks.inYourLibrary')}
             </p>
           </div>
         </motion.div>
@@ -125,25 +224,25 @@ export default function ActiveBooksPage() {
               <motion.div
                 key={book._id}
                 variants={itemVariants}
-                className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:border-teal-300"
+                className="group overflow-hidden rounded-2xl border border-white/12 bg-slate-900/62 shadow-lg shadow-slate-900/35 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-200/35 hover:bg-slate-900/72 hover:shadow-2xl"
               >
                 {/* Book Cover */}
-                <div className="relative overflow-hidden bg-slate-100 h-64">
+                <div className="relative h-64 overflow-hidden bg-slate-950">
                   <img
                     src={book.coverImage}
                     alt={book.title}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/0 transition-all duration-300 group-hover:bg-black/30" />
+                  <div className="absolute inset-0 bg-black/10 transition-all duration-300 group-hover:bg-black/35" />
                 </div>
 
                 {/* Book Info */}
                 <div className="space-y-3 p-4">
                   <div>
-                    <h3 className="line-clamp-2 text-sm font-bold text-slate-900">
+                    <h3 className="line-clamp-2 text-sm font-bold text-white">
                       {book.title}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-1">{book.author}</p>
+                    <p className="mt-1 text-xs text-slate-300/95">{book.author}</p>
                   </div>
 
                   {/* Rating */}
@@ -154,11 +253,11 @@ export default function ActiveBooksPage() {
                       ))}
                       {book.rating % 1 !== 0 && <IoStarHalf />}
                     </div>
-                    <span className="text-xs text-slate-500">({book.rating})</span>
+                    <span className="text-xs text-slate-300/95">({book.rating})</span>
                   </div>
 
                   {/* Meta Info */}
-                  <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center justify-between text-xs text-slate-300/95">
                     <span>${book.price}</span>
                     <span>
                       {new Date(book.purchasedOn).toLocaleDateString('en-US', {
@@ -178,7 +277,7 @@ export default function ActiveBooksPage() {
                       onClick={() => handleReadBook(book._id)}
                     >
                       <IoEye className="text-sm" />
-                      <span className="hidden sm:inline">Read</span>
+                      <span className="hidden sm:inline">{t('myBooks.read')}</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -197,20 +296,30 @@ export default function ActiveBooksPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl border border-slate-200 bg-white px-8 py-16 text-center"
+            className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md"
           >
-            <IoBook className="mx-auto mb-4 text-5xl text-slate-400" />
-            <h2 className="text-xl font-bold text-slate-900 mb-2">No Books Yet</h2>
-            <p className="text-slate-600 mb-6">Start exploring and purchase books to build your library</p>
+            <IoBook className="mx-auto mb-4 text-5xl text-slate-300" />
+            <h2 className="mb-2 text-xl font-bold text-white">{t('myBooks.noBooks')}</h2>
+            <p className="mb-6 text-slate-300">{t('myBooks.noBookDescription')}</p>
             <Button
               variant="primary"
               onClick={() => router.push('/')}
             >
-              Browse Books
+              {t('myBooks.browseBooks')}
             </Button>
           </motion.div>
         )}
-      </div>
+        </div>
+      </main>
+
+      <Footer />
+
+      <AuthDrawer
+        isOpen={authDrawerOpen}
+        onClose={() => setAuthDrawerOpen(false)}
+        initialUserType={authUserType}
+        initialFormType={authFormType}
+      />
     </div>
   );
 }

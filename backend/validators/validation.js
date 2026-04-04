@@ -16,6 +16,18 @@ export const loginValidation = [
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
+export const adminSignupOTPRequestValidation = [
+  body('fullName').trim().notEmpty().withMessage('Full name is required').isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
+  body('email').isEmail().withMessage('Please provide a valid email'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('phoneNumber').optional().trim(),
+];
+
+export const adminSignupOTPVerifyValidation = [
+  body('email').isEmail().withMessage('Please provide a valid email'),
+  body('otp').trim().notEmpty().withMessage('OTP is required').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 characters'),
+];
+
 export const forgotPasswordValidation = [
   body('email').isEmail().withMessage('Please provide a valid email'),
 ];
@@ -39,28 +51,33 @@ export const updateProfileValidation = [
   body('fullName').trim().notEmpty().withMessage('Full name is required').isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
 ];
 
+export const requestEmailChangeOTPValidation = [
+  body('newEmail').isEmail().withMessage('Please provide a valid new email'),
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+];
+
+export const verifyEmailChangeOTPValidation = [
+  body('otp').trim().notEmpty().withMessage('OTP is required').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 characters'),
+];
+
 export const publisherSignupValidation = [
   body('fullName').trim().notEmpty().withMessage('Full name is required').isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('publisherName').trim().notEmpty().withMessage('Publisher name is required').isLength({ min: 2 }).withMessage('Publisher name must be at least 2 characters'),
-  body('phoneNumber').trim().notEmpty().withMessage('Phone number is required').matches(/^[0-9+\-\s()]{10,}$/).withMessage('Please provide a valid phone number'),
+  body('phoneNumber').trim().notEmpty().withMessage('Phone number is required').matches(/^\d{11}$/).withMessage('Phone number must be exactly 11 digits'),
   body('address.street').trim().notEmpty().withMessage('Street address is required'),
   body('address.city').trim().notEmpty().withMessage('City is required'),
-  body('address.state').trim().notEmpty().withMessage('State is required'),
   body('address.zipCode').trim().notEmpty().withMessage('Zip code is required'),
-  body('address.country').trim().notEmpty().withMessage('Country is required'),
 ];
 
 export const publisherUpdateProfileValidation = [
   body('fullName').optional().trim().isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
   body('publisherName').optional().trim().isLength({ min: 2 }).withMessage('Publisher name must be at least 2 characters'),
-  body('phoneNumber').optional().trim().matches(/^[0-9+\-\s()]{10,}$/).withMessage('Please provide a valid phone number'),
+  body('phoneNumber').optional().trim().matches(/^\d{11}$/).withMessage('Phone number must be exactly 11 digits'),
   body('address.street').optional().trim(),
   body('address.city').optional().trim(),
-  body('address.state').optional().trim(),
   body('address.zipCode').optional().trim(),
-  body('address.country').optional().trim(),
 ];
 
 export const registerValidation = [

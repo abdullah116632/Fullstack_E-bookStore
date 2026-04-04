@@ -34,9 +34,7 @@ const publisherSchema = new mongoose.Schema(
     address: {
       street: String,
       city: String,
-      state: String,
       zipCode: String,
-      country: String,
     },
     isEmailVerified: {
       type: Boolean,

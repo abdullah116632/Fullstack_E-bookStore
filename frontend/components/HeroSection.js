@@ -3,8 +3,11 @@
 import { motion } from 'framer-motion';
 import { FaBook, FaUsers, FaChartLine } from 'react-icons/fa';
 import Button from '@/components/common/Button';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function HeroSection({ onSignupClick, onLoginClick }) {
+  const { t } = useTranslation();
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -24,20 +27,20 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
   const features = [
     {
       icon: FaBook,
-      title: 'Curated Collection',
-      description: 'Discover quality titles selected across fiction, non-fiction, business, and learning.',
+      titleKey: 'hero.feature1Title',
+      descKey: 'hero.feature1Desc',
       color: 'from-teal-500 to-cyan-500',
     },
     {
       icon: FaUsers,
-      title: 'Author & Publisher Hub',
-      description: 'Connect directly with creators, follow releases, and support independent publishing.',
+      titleKey: 'hero.feature2Title',
+      descKey: 'hero.feature2Desc',
       color: 'from-orange-500 to-amber-500',
     },
     {
       icon: FaChartLine,
-      title: 'Smart Reading Journey',
-      description: 'Track progress, save favorites, and build a personal library that grows with you.',
+      titleKey: 'hero.feature3Title',
+      descKey: 'hero.feature3Desc',
       color: 'from-sky-500 to-blue-500',
     },
   ];
@@ -46,46 +49,45 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
     <div className="relative min-h-screen overflow-hidden bg-transparent">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -left-16 top-0 h-72 w-72 rounded-full bg-teal-300/35 blur-3xl" />
-        <div className="absolute right-0 top-28 h-80 w-80 rounded-full bg-orange-200/40 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-cyan-200/35 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-140 bg-linear-to-b from-slate-900 via-slate-800 to-transparent" />
+        <div className="absolute -left-24 -top-10 h-80 w-80 rounded-full bg-cyan-300/18 blur-3xl" />
+        <div className="absolute right-0 top-20 h-96 w-96 rounded-full bg-sky-300/18 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-blue-300/14 blur-3xl" />
+        <div className="absolute inset-x-0 top-36 h-px bg-linear-to-r from-transparent via-cyan-200/35 to-transparent" />
       </div>
 
       {/* Main Hero */}
-      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           className="mb-16 text-center"
         >
-          <motion.div variants={itemVariants} className="mb-6 inline-block">
-            <div className="rounded-full border border-teal-300 bg-white/70 px-4 py-2 text-sm font-semibold tracking-wide text-teal-700 shadow-sm">
-              Built for modern readers and publishers
+          <motion.div variants={itemVariants} className="mb-7 inline-block">
+            <div className="rounded-full border border-cyan-200/30 bg-white/12 px-5 py-2 text-sm font-semibold tracking-wide text-cyan-50 shadow-md backdrop-blur-sm">
+              {t('hero.badge')}
             </div>
           </motion.div>
 
           <motion.h1
             variants={itemVariants}
-            className="mb-7 text-5xl font-bold leading-tight text-slate-900 sm:text-6xl lg:text-7xl"
+            className="mb-7 text-5xl font-bold leading-tight text-white sm:text-6xl lg:text-7xl"
           >
-            A New Way To
+            {t('hero.mainTitle')}
             <br />
-            <span className="bg-linear-to-r from-teal-600 via-cyan-600 to-orange-500 bg-clip-text text-transparent">
-              Read, Publish, Grow
-            </span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="mx-auto mb-10 max-w-3xl text-lg leading-relaxed text-slate-600 sm:text-xl"
+            className="mx-auto mb-10 max-w-3xl text-lg leading-relaxed text-slate-200/95 sm:text-xl"
           >
-            Explore standout books, follow the publishers you trust, and build your reading life with a platform designed to feel fast, clear, and premium.
+            {t('hero.subtitle')}
           </motion.p>
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            className="flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
             <Button
               variant="primary"
@@ -93,7 +95,7 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
               onClick={onSignupClick}
               className="w-full sm:w-auto"
             >
-              Create Free Account
+              {t('hero.cta')}
             </Button>
             <Button
               variant="outline"
@@ -101,7 +103,7 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
               onClick={onLoginClick}
               className="w-full sm:w-auto"
             >
-              Sign In
+              {t('hero.ctaSecondary')}
             </Button>
           </motion.div>
         </motion.div>
@@ -117,13 +119,13 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
             <motion.div
               key={index}
               variants={itemVariants}
-              className="group rounded-2xl border border-slate-200 bg-white/80 p-7 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              className="group rounded-3xl border border-white/12 bg-slate-900/55 p-7 shadow-md shadow-slate-900/35 backdrop-blur-md transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-200/35 hover:bg-slate-900/65 hover:shadow-xl"
             >
-              <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-linear-to-br ${feature.color} shadow-md transition-transform duration-300 group-hover:scale-105`}>
+              <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br ${feature.color} shadow-md transition-transform duration-300 group-hover:scale-105`}>
                 <feature.icon className="text-white text-2xl" />
               </div>
-              <h3 className="mb-2 text-xl font-bold text-slate-900">{feature.title}</h3>
-              <p className="leading-relaxed text-slate-600">{feature.description}</p>
+              <h3 className="mb-2 text-xl font-bold text-white">{t(feature.titleKey)}</h3>
+              <p className="leading-relaxed text-slate-300/95">{t(feature.descKey)}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -133,18 +135,18 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="mt-20 grid gap-10 rounded-2xl border border-slate-200 bg-white/70 px-6 py-10 shadow-sm backdrop-blur-sm md:grid-cols-3"
+          className="mt-20 grid gap-10 rounded-3xl border border-white/12 bg-slate-900/55 px-6 py-10 shadow-md shadow-slate-900/35 backdrop-blur-md md:grid-cols-3"
         >
           {[
-            { number: '10K+', label: 'Books Published' },
-            { number: '100K+', label: 'Active Readers' },
-            { number: '50+', label: 'Countries Served' },
+            { numberKey: 'hero.stat1Number', labelKey: 'hero.stat1Label' },
+            { numberKey: 'hero.stat2Number', labelKey: 'hero.stat2Label' },
+            { numberKey: 'hero.stat3Number', labelKey: 'hero.stat3Label' },
           ].map((stat, index) => (
             <motion.div key={index} variants={itemVariants} className="text-center">
               <p className="mb-2 bg-linear-to-r from-teal-600 to-cyan-600 bg-clip-text text-5xl font-bold text-transparent sm:text-6xl">
-                {stat.number}
+                {t(stat.numberKey)}
               </p>
-              <p className="text-base font-medium text-slate-600">{stat.label}</p>
+              <p className="text-base font-medium text-slate-300/95">{t(stat.labelKey)}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -154,13 +156,13 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="mt-20 rounded-3xl bg-linear-to-r from-teal-600 via-cyan-600 to-sky-600 p-12 text-center text-white shadow-2xl lg:p-16"
+          className="mt-20 rounded-3xl border border-cyan-200/25 bg-linear-to-r from-slate-900 via-slate-800 to-cyan-900 p-12 text-center text-white shadow-2xl shadow-slate-900/30 lg:p-16"
         >
           <motion.h2 variants={itemVariants} className="mb-4 text-3xl font-bold sm:text-4xl">
-            Ready to elevate your reading experience?
+            {t('hero.ctaTitle')}
           </motion.h2>
           <motion.p variants={itemVariants} className="mx-auto mb-8 max-w-2xl text-lg opacity-95">
-            Join a platform built to feel modern, simple, and powerful from your first click.
+            {t('hero.ctaDescription')}
           </motion.p>
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -169,7 +171,7 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
               onClick={onSignupClick}
               className="w-full border-white/60 bg-white/90 text-slate-900 hover:bg-white sm:w-auto"
             >
-              Start Now
+              {t('hero.ctaButton')}
             </Button>
             <Button
               variant="outline"
@@ -177,7 +179,7 @@ export default function HeroSection({ onSignupClick, onLoginClick }) {
               onClick={onLoginClick}
               className="w-full border-white bg-white/10 text-white hover:bg-white/20 sm:w-auto"
             >
-              View Library
+              {t('hero.ctaSecondaryButton')}
             </Button>
           </motion.div>
         </motion.div>

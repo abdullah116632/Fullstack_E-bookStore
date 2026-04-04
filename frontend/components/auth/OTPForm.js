@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import { readerVerifySignup, publisherVerifySignup } from '@/store/slices/authSlice';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function OTPForm({ userType = 'reader', email, onSuccess, onBackToSignup }) {
   const [otp, setOtp] = useState('');
@@ -14,6 +15,7 @@ export default function OTPForm({ userType = 'reader', email, onSuccess, onBackT
   const [resendTimer, setResendTimer] = useState(0);
   const dispatch = useDispatch();
   const { isLoading } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   // Resend timer countdown
   useEffect(() => {
@@ -56,16 +58,16 @@ export default function OTPForm({ userType = 'reader', email, onSuccess, onBackT
         response = await dispatch(publisherVerifySignup(verifyData)).unwrap();
       }
 
-      toast.success(response.message || 'Email verified successfully!');
+      toast.success(response.message || t('auth.verifySuccess'));
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError(err?.message || 'Verification failed. Please try again.');
-      toast.error(err?.message || 'Verification failed. Please try again.');
+      setError(err?.message || t('auth.otpFailed'));
+      toast.error(err?.message || t('auth.otpFailed'));
     }
   };
 
   const handleResend = () => {
-    toast.success('OTP resent to your email');
+    toast.success(t('auth.otpSent'));
     setResendTimer(60);
     setOtp('');
   };
@@ -79,20 +81,20 @@ export default function OTPForm({ userType = 'reader', email, onSuccess, onBackT
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="text-center">
-          <h3 className="mb-2 text-lg font-semibold text-slate-900">Verify Your Email</h3>
+          <h3 className="mb-2 text-lg font-semibold text-slate-900">{t('auth.otpTitle')}</h3>
           <p className="text-sm text-slate-600">
-            We sent a 6-digit OTP to <span className="font-semibold text-slate-800">{email}</span>
+            {t('auth.otpDescription')} <span className="font-semibold text-slate-800">{email}</span>
           </p>
         </div>
 
         <div className="rounded-xl border border-teal-200 bg-teal-50 p-3.5">
           <p className="text-sm text-teal-800">
-            Enter the OTP sent to your email. It will expire in 10 minutes.
+            {t('auth.otpDescription')}
           </p>
         </div>
 
         <Input
-          label="One-Time Password (OTP)"
+          label={t('auth.otp')}
           type="text"
           inputMode="numeric"
           value={otp}
@@ -117,13 +119,13 @@ export default function OTPForm({ userType = 'reader', email, onSuccess, onBackT
           isLoading={isLoading}
           className="w-full"
         >
-          Verify OTP
+          {t('auth.verifyEmail')}
         </Button>
 
         <div className="text-center">
           {resendTimer > 0 ? (
             <p className="text-sm text-slate-600">
-              Resend OTP in <span className="font-semibold text-teal-700">{resendTimer}s</span>
+              {t('auth.resendIn')} <span className="font-semibold text-teal-700">{resendTimer}{t('auth.seconds')}</span>
             </p>
           ) : (
             <button
@@ -131,7 +133,7 @@ export default function OTPForm({ userType = 'reader', email, onSuccess, onBackT
               onClick={handleResend}
               className="text-sm font-medium text-teal-700 transition-colors hover:text-teal-800"
             >
-              Didn't receive OTP? Resend
+              {t('auth.resendOtp')}
             </button>
           )}
         </div>
@@ -141,7 +143,7 @@ export default function OTPForm({ userType = 'reader', email, onSuccess, onBackT
           onClick={onBackToSignup}
           className="w-full text-center text-sm text-slate-500 transition-colors hover:text-slate-700"
         >
-          Back to signup
+          {t('auth.backToSignup')}
         </button>
       </form>
     </motion.div>

@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f4f7fb;
+  --foreground: #0b1220;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-brand-sans);
+  --font-mono: var(--font-brand-display);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,18 +30,33 @@ html {
 
 body {
   background:
-    radial-gradient(circle at 10% 10%, rgba(20, 184, 166, 0.12), transparent 38%),
-    radial-gradient(circle at 90% 0%, rgba(249, 115, 22, 0.12), transparent 40%),
-    linear-gradient(180deg, #f8fafc 0%, #fdf7ed 48%, #f3fbfb 100%);
+    radial-gradient(circle at 8% 6%, rgba(20, 184, 166, 0.17), transparent 33%),
+    radial-gradient(circle at 95% 8%, rgba(251, 146, 60, 0.2), transparent 38%),
+    radial-gradient(circle at 50% 100%, rgba(14, 116, 144, 0.13), transparent 48%),
+    linear-gradient(180deg, #f4f7fb 0%, #fff8ef 52%, #eefaf8 100%);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  font-family: var(--font-brand-sans), "Segoe UI", sans-serif;
   min-height: 100vh;
   position: relative;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-brand-display), "Segoe UI", sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* Smooth transitions */
 button, a, input, select, textarea {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Button cursor pointer */
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 /* Custom scrollbar */

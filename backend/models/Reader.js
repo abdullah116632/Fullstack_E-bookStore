@@ -44,6 +44,19 @@ const readerSchema = new mongoose.Schema(
         default: 0,
       },
     },
+    // OTP for email change verification
+    emailChangeOTP: {
+      newEmail: {
+        type: String,
+        lowercase: true,
+      },
+      code: String,
+      expiresAt: Date,
+      attempts: {
+        type: Number,
+        default: 0,
+      },
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -82,6 +95,7 @@ readerSchema.methods.toJSON = function () {
   delete obj.password;
   delete obj.signupOTP;
   delete obj.resetOTP;
+  delete obj.emailChangeOTP;
   return obj;
 };
 

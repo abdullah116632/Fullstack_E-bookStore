@@ -12,7 +12,12 @@ const bookSchema = new mongoose.Schema(
     description: {
       type: String,
       required: [true, 'Book description is required'],
-      minlength: [10, 'Description must be at least 10 characters'],
+      validate: {
+        validator: function (value) {
+          return value.trim().split(/\s+/).filter(Boolean).length >= 100;
+        },
+        message: 'Book description must be at least 100 words',
+      },
     },
     author: {
       type: String,
@@ -21,12 +26,12 @@ const bookSchema = new mongoose.Schema(
     },
     publisher: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Publisher',
       required: [true, 'Publisher is required'],
     },
     category: {
       type: String,
-      required: [true, 'Category is required'],
+      default: 'other',
       enum: [
         'fiction',
         'non-fiction',
@@ -46,14 +51,17 @@ const bookSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Cover image is required'],
     },
+    coverImagePublicId: {
+      type: String,
+    },
     price: {
       type: Number,
-      required: [true, 'Price is required'],
+      default: 0,
       min: [0, 'Price cannot be negative'],
     },
     pages: {
       type: Number,
-      required: [true, 'Number of pages is required'],
+      default: 1,
       min: [1, 'Pages must be at least 1'],
     },
     language: {
@@ -68,11 +76,14 @@ const bookSchema = new mongoose.Schema(
     },
     publicationDate: {
       type: Date,
-      required: true,
+      default: Date.now,
     },
     fileUrl: {
       type: String,
       required: [true, 'File URL is required (PDF or EPUB)'],
+    },
+    filePublicId: {
+      type: String,
     },
     fileType: {
       type: String,

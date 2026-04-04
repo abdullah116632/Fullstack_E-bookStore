@@ -1,32 +1,73 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IoLogOut, IoArrowForward, IoKey, IoPerson } from 'react-icons/io5';
+import { IoLogOut, IoArrowForward, IoKey, IoPerson, IoMail } from 'react-icons/io5';
 import { logout } from '@/store/slices/authSlice';
+import { useTranslation } from '@/hooks/useTranslation';
 
-export default function ProfileDropdown({ onEditProfile, onUpdatePassword }) {
+export default function ProfileDropdown({ onEditProfile, onUpdatePassword, onChangeEmail }) {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const router = useRouter();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (!isOpen) return;
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isOpen]);
 
   if (!user) return null;
 
-  const handleLogout = () => {
+  const handleLogout = (e) => {
+    if (e) {
+      e.preventDefault?.();
+      e.stopPropagation?.();
+    }
+    sessionStorage.setItem('intentionalLogout', '1');
     dispatch(logout());
     setIsOpen(false);
+    router.push('/');
   };
 
-  const handleProfileClick = () => {
+  const handleProfileClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     setIsOpen(false);
-    onEditProfile?.();
+    setTimeout(() => {
+      onEditProfile?.();
+    }, 0);
   };
 
-  const handlePasswordClick = () => {
+  const handlePasswordClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     setIsOpen(false);
-    onUpdatePassword?.();
+    setTimeout(() => {
+      onUpdatePassword?.();
+    }, 0);
+  };
+
+  const handleEmailClick = (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    setIsOpen(false);
+    setTimeout(() => {
+      onChangeEmail?.();
+    }, 0);
   };
 
   const getInitial = (name) => {
@@ -36,24 +77,29 @@ export default function ProfileDropdown({ onEditProfile, onUpdatePassword }) {
   const menuItems = [
     {
       icon: <IoPerson className="text-lg" />,
-      label: 'Edit Profile',
+      label: t('profileDropdown.editProfile'),
       onClick: handleProfileClick,
     },
     {
+      icon: <IoMail className="text-lg" />,
+      label: t('profileDropdown.changeEmail'),
+      onClick: handleEmailClick,
+    },
+    {
       icon: <IoKey className="text-lg" />,
-      label: 'Change Password',
+      label: t('profileDropdown.changePassword'),
       onClick: handlePasswordClick,
     },
     {
       icon: <IoLogOut className="text-lg" />,
-      label: 'Logout',
+      label: t('profileDropdown.logout'),
       onClick: handleLogout,
       isDanger: true,
     },
   ];
 
   return (
-    <div className="relative">
+    <div ref={dropdownRef} className="relative">
       {/* Profile Button */}
       <motion.button
         whileHover={{ scale: 1.05 }}
@@ -74,6 +120,9 @@ export default function ProfileDropdown({ onEditProfile, onUpdatePassword }) {
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15 }}
             className="absolute right-0 top-12 z-50 w-56 rounded-xl border border-slate-200 bg-white shadow-xl"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
           >
             {/* Header */}
             <div className="border-b border-slate-200 px-4 py-3.5">
@@ -84,10 +133,10 @@ export default function ProfileDropdown({ onEditProfile, onUpdatePassword }) {
             {/* Menu Items */}
             <div className="py-2">
               {menuItems.map((item, index) => (
-                <motion.button
+                <button
                   key={index}
-                  whileHover={{ backgroundColor: item.isDanger ? '#fef2f2' : '#f8fafc' }}
-                  onClick={item.onClick}
+                  type="button"
+                  onClick={(e) => item.onClick?.(e)}
                   className={`flex w-full items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
                     item.isDanger
                       ? 'text-red-600 hover:bg-red-50'
@@ -99,27 +148,18 @@ export default function ProfileDropdown({ onEditProfile, onUpdatePassword }) {
                   </span>
                   <span className="flex-1 text-left">{item.label}</span>
                   <IoArrowForward className={`text-xs ${item.isDanger ? 'text-red-400' : 'text-slate-400'}`} />
-                </motion.button>
+                </button>
               ))}
             </div>
 
             {/* Footer */}
-            <div className="border-t border-slate-200 px-4 py-2.5 text-xs text-slate-500">
-              <Link href="/active-book" className="hover:text-teal-700 transition-colors font-medium">
-                My Books →
-              </Link>
+            <div className="border-t border-slate-200 px-4 py-3 text-xs text-slate-500">
+              <p className="text-center italic">Profile Settings</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Close on outside click */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 cursor-default"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
     </div>
   );
 }

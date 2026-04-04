@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import { readerSignup, publisherSignup, setSignupEmail } from '@/store/slices/authSlice';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -20,15 +21,14 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
     address: {
       street: '',
       city: '',
-      state: '',
       zipCode: '',
-      country: '',
     },
   });
 
   const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   const validateForm = () => {
     const newErrors = {};
@@ -52,14 +52,12 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
       if (!formData.publisherName || formData.publisherName.length < 2) {
         newErrors.publisherName = 'Publisher name must be at least 2 characters';
       }
-      if (!formData.phoneNumber || formData.phoneNumber.length < 10) {
-        newErrors.phoneNumber = 'Valid phone number is required';
+      if (!/^\d{11}$/.test(formData.phoneNumber)) {
+        newErrors.phoneNumber = 'Mobile number must be exactly 11 digits';
       }
       if (!formData.address.street) newErrors['address.street'] = 'Street is required';
       if (!formData.address.city) newErrors['address.city'] = 'City is required';
-      if (!formData.address.state) newErrors['address.state'] = 'State is required';
       if (!formData.address.zipCode) newErrors['address.zipCode'] = 'Zip code is required';
-      if (!formData.address.country) newErrors['address.country'] = 'Country is required';
     }
 
     setErrors(newErrors);
@@ -105,16 +103,16 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
       }
 
       dispatch(setSignupEmail(submitData.email));
-      toast.success(response.message || 'OTP sent to your email!');
+      toast.success(response.message || t('auth.otpSent'));
       if (onSuccess) onSuccess();
     } catch (err) {
-      toast.error(err?.message || 'Signup failed. Please try again.');
+      toast.error(err?.message || t('auth.signupFailed'));
     }
   };
 
   const userTypeLabels = {
-    reader: 'Reader',
-    publisher: 'Publisher',
+    reader: t('auth.reader'),
+    publisher: t('auth.publisher'),
   };
 
   return (
@@ -127,12 +125,12 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="mb-4 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3.5">
           <p className="text-sm font-medium text-teal-800">
-            Signing up as <span className="font-bold uppercase tracking-wide">{userTypeLabels[userType]}</span>
+            {t('auth.signingUpAs')} <span className="font-bold uppercase tracking-wide">{userTypeLabels[userType]}</span>
           </p>
         </div>
 
         <Input
-          label="Full Name"
+          label={t('auth.fullName')}
           type="text"
           name="fullName"
           value={formData.fullName}
@@ -143,7 +141,7 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
         />
 
         <Input
-          label="Email Address"
+          label={t('auth.email')}
           type="email"
           name="email"
           value={formData.email}
@@ -156,7 +154,7 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
         {userType === 'publisher' && (
           <>
             <Input
-              label="Publisher Name"
+              label={t('auth.publisherName')}
               type="text"
               name="publisherName"
               value={formData.publisherName}
@@ -167,20 +165,32 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
             />
 
             <Input
-              label="Phone Number"
+              label={t('auth.phoneNumber')}
               type="tel"
               name="phoneNumber"
               value={formData.phoneNumber}
-              onChange={handleChange}
+              onChange={(e) => {
+                const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 11);
+                const customEvent = {
+                  ...e,
+                  target: {
+                    ...e.target,
+                    name: 'phoneNumber',
+                    value: digitsOnly,
+                  },
+                };
+                handleChange(customEvent);
+              }}
               error={errors.phoneNumber}
-              placeholder="+1-234-567-8900"
+              placeholder="01XXXXXXXXX"
+              maxLength={11}
               required
             />
 
             <div className="border-t pt-4 mt-4">
               <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-600">Address Information</h3>
               <Input
-                label="Street Address"
+                label={t('auth.street')}
                 type="text"
                 name="address.street"
                 value={formData.address.street}
@@ -192,57 +202,34 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
 
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="City"
+                  label={t('auth.city')}
                   type="text"
                   name="address.city"
                   value={formData.address.city}
                   onChange={handleChange}
                   error={errors['address.city']}
-                  placeholder="New York"
+                  placeholder="Dhaka"
                   required
                 />
 
                 <Input
-                  label="State"
-                  type="text"
-                  name="address.state"
-                  value={formData.address.state}
-                  onChange={handleChange}
-                  error={errors['address.state']}
-                  placeholder="NY"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  label="Zip Code"
+                  label={t('auth.zipCode')}
                   type="text"
                   name="address.zipCode"
                   value={formData.address.zipCode}
                   onChange={handleChange}
                   error={errors['address.zipCode']}
-                  placeholder="10001"
-                  required
-                />
-
-                <Input
-                  label="Country"
-                  type="text"
-                  name="address.country"
-                  value={formData.address.country}
-                  onChange={handleChange}
-                  error={errors['address.country']}
-                  placeholder="USA"
+                  placeholder="1205"
                   required
                 />
               </div>
+
             </div>
           </>
         )}
 
         <Input
-          label="Password"
+          label={t('auth.password')}
           type="password"
           name="password"
           value={formData.password}
@@ -253,7 +240,7 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
         />
 
         <Input
-          label="Confirm Password"
+          label={t('auth.confirmPassword')}
           type="password"
           name="confirmPassword"
           value={formData.confirmPassword}
@@ -276,7 +263,7 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
           isLoading={isLoading}
           className="w-full"
         >
-          Continue to OTP Verification
+          {t('auth.verifyEmail')}
         </Button>
 
         <button
@@ -284,7 +271,7 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
           onClick={onSwitchToLogin}
           className="w-full text-center text-sm font-medium text-slate-500 transition-colors hover:text-teal-700"
         >
-          Already have an account? <span className="font-bold text-teal-700">Login</span>
+          {t('auth.haveAccount')} <span className="font-bold text-teal-700">{t('auth.signIn')}</span>
         </button>
       </form>
     </motion.div>

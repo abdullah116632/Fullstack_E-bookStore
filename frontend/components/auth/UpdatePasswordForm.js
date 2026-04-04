@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import { useTranslation } from '@/hooks/useTranslation';
 import { readerAuthService } from '@/services/authService';
 
 export default function UpdatePasswordForm({
@@ -20,6 +21,7 @@ export default function UpdatePasswordForm({
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation();
 
   const validateForm = () => {
     const newErrors = {};
@@ -83,15 +85,15 @@ export default function UpdatePasswordForm({
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5">
           <p className="text-sm font-medium text-slate-700">
-            Change Password
+            {t('auth.updatePassword')}
             <span className="mt-1 block text-xs font-normal text-slate-500">
-              Update your password to keep your account secure
+              {t('auth.changePassword')}
             </span>
           </p>
         </div>
 
         <Input
-          label="Current Password"
+          label={t('auth.currentPassword')}
           type="password"
           name="currentPassword"
           value={formData.currentPassword}
@@ -102,7 +104,7 @@ export default function UpdatePasswordForm({
         />
 
         <Input
-          label="New Password"
+          label={t('auth.newPassword')}
           type="password"
           name="newPassword"
           value={formData.newPassword}
@@ -113,7 +115,7 @@ export default function UpdatePasswordForm({
         />
 
         <Input
-          label="Confirm New Password"
+          label={t('auth.confirmPassword')}
           type="password"
           name="confirmPassword"
           value={formData.confirmPassword}
@@ -143,7 +145,7 @@ export default function UpdatePasswordForm({
             isLoading={isLoading}
             className="flex-1 font-semibold"
           >
-            {isLoading ? 'Updating...' : 'Update Password'}
+            {isLoading ? t('auth.common.loading') : t('auth.updatePassword')}
           </Button>
           <Button
             type="button"

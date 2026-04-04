@@ -16,15 +16,8 @@ const getResend = () => {
 
 export const sendOTPEmail = async (email, otp, userType = 'signup') => {
   try {
-    const subject = userType === 'signup' ? 'Verify Your Email - E-book Marketplace' : 'Password Reset OTP - E-book Marketplace';
-    
-    const htmlContent = userType === 'signup' ? `
-      <h2>Email Verification</h2>
-      <p>Your OTP for verifying your email is:</p>
-      <h1 style="color: #007bff; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
-      <p>This OTP will expire in 10 minutes.</p>
-      <p>If you didn't request this, please ignore this email.</p>
-    ` : `
+    let subject = 'Password Reset OTP - E-book Marketplace';
+    let htmlContent = `
       <h2>Password Reset Request</h2>
       <p>Your OTP for resetting your password is:</p>
       <h1 style="color: #007bff; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
@@ -32,8 +25,30 @@ export const sendOTPEmail = async (email, otp, userType = 'signup') => {
       <p>If you didn't request this, please ignore this email.</p>
     `;
 
+    if (userType === 'signup') {
+      subject = 'Verify Your Email - E-book Marketplace';
+      htmlContent = `
+        <h2>Email Verification</h2>
+        <p>Your OTP for verifying your email is:</p>
+        <h1 style="color: #007bff; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
+        <p>This OTP will expire in 10 minutes.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      `;
+    }
+
+    if (userType === 'email-change') {
+      subject = 'Verify New Email - E-book Marketplace';
+      htmlContent = `
+        <h2>Email Change Verification</h2>
+        <p>Your OTP for changing your account email is:</p>
+        <h1 style="color: #007bff; font-size: 32px; letter-spacing: 5px;">${otp}</h1>
+        <p>This OTP will expire in 10 minutes.</p>
+        <p>If you didn't request this, please secure your account immediately.</p>
+      `;
+    }
+
     const result = await getResend().emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@ebookmarketplace.com',
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: email,
       subject,
       html: htmlContent,
@@ -55,7 +70,7 @@ export const sendWelcomeEmail = async (email, fullName) => {
     `;
 
     const result = await getResend().emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@ebookmarketplace.com',
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: email,
       subject: 'Welcome to E-book Marketplace',
       html: htmlContent,
@@ -81,7 +96,7 @@ export const sendOrderConfirmationEmail = async (email, fullName, orderNumber, t
     `;
 
     const result = await getResend().emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@ebookmarketplace.com',
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: email,
       subject: `Order Confirmation - ${orderNumber}`,
       html: htmlContent,

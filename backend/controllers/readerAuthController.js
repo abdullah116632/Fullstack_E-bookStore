@@ -403,6 +403,153 @@ export const readerUpdateProfile = async (req, res, next) => {
   }
 };
 
+// Send Email Change OTP (requires authentication)
+export const readerSendEmailChangeOTP = async (req, res, next) => {
+  try {
+    const { newEmail, currentPassword } = req.body;
+    const readerId = req.user._id;
+
+    const reader = await Reader.findById(readerId).select('+password');
+    if (!reader) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Reader not found.',
+      });
+    }
+
+    const isPasswordCorrect = await reader.matchPassword(currentPassword);
+    if (!isPasswordCorrect) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Current password is incorrect.',
+      });
+    }
+
+    const normalizedEmail = newEmail.trim().toLowerCase();
+
+    if (reader.email === normalizedEmail) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'New email must be different from current email.',
+      });
+    }
+
+    const existingReader = await Reader.findOne({ email: normalizedEmail, _id: { $ne: readerId } });
+    if (existingReader) {
+      return res.status(HTTP_STATUS.CONFLICT).json({
+        success: false,
+        message: 'Email already in use. Please choose another email.',
+      });
+    }
+
+    const otp = generateOTP();
+    const otpExpiry = getOTPExpiryTime();
+
+    reader.emailChangeOTP = {
+      newEmail: normalizedEmail,
+      code: otp,
+      expiresAt: otpExpiry,
+      attempts: 0,
+    };
+
+    await reader.save();
+
+    try {
+      await sendOTPEmail(normalizedEmail, otp, 'email-change');
+    } catch (emailError) {
+      console.error('Failed to send email change OTP:', emailError);
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Failed to send OTP email. Please try again.',
+      });
+    }
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'OTP sent to your new email address. Please verify to continue.',
+      data: {
+        newEmail: normalizedEmail,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Verify Email Change OTP and update email (requires authentication)
+export const readerVerifyEmailChangeOTP = async (req, res, next) => {
+  try {
+    const { otp } = req.body;
+    const readerId = req.user._id;
+
+    const reader = await Reader.findById(readerId);
+    if (!reader) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Reader not found.',
+      });
+    }
+
+    if (!reader.emailChangeOTP?.code || !reader.emailChangeOTP?.newEmail) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'No email change request found. Please request OTP first.',
+      });
+    }
+
+    if (!isOTPValid(reader.emailChangeOTP.expiresAt)) {
+      reader.emailChangeOTP = undefined;
+      await reader.save();
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'OTP expired. Please request a new one.',
+      });
+    }
+
+    if (isOTPAttemptsExceeded(reader.emailChangeOTP.attempts)) {
+      reader.emailChangeOTP = undefined;
+      await reader.save();
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Too many OTP attempts. Please request a new OTP.',
+      });
+    }
+
+    if (reader.emailChangeOTP.code !== otp) {
+      reader.emailChangeOTP.attempts += 1;
+      await reader.save();
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: `Invalid OTP. ${5 - reader.emailChangeOTP.attempts} attempts remaining.`,
+      });
+    }
+
+    const requestedEmail = reader.emailChangeOTP.newEmail;
+
+    const existingReader = await Reader.findOne({ email: requestedEmail, _id: { $ne: readerId } });
+    if (existingReader) {
+      return res.status(HTTP_STATUS.CONFLICT).json({
+        success: false,
+        message: 'This email is no longer available. Please try a different one.',
+      });
+    }
+
+    reader.email = requestedEmail;
+    reader.emailChangeOTP = undefined;
+    await reader.save();
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Email updated successfully.',
+      data: {
+        user: reader.toJSON(),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get Reader Profile (requires authentication)
 export const getReaderProfile = async (req, res, next) => {
   try {

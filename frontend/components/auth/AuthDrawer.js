@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { AnimatePresence } from 'framer-motion';
 import Drawer from '../common/Drawer';
@@ -10,16 +10,27 @@ import OTPForm from './OTPForm';
 import ResetPasswordForm from './ResetPasswordForm';
 import UpdateProfileForm from './UpdateProfileForm';
 import UpdatePasswordForm from './UpdatePasswordForm';
+import UpdateEmailForm from './UpdateEmailForm';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function AuthDrawer({
   isOpen,
   onClose,
   initialUserType = 'reader',
-  initialFormType = 'login', // 'login', 'signup', 'otp', 'resetPassword', 'updateProfile', 'updatePassword'
+  initialFormType = 'login', // 'login', 'signup', 'otp', 'resetPassword', 'updateProfile', 'updatePassword', 'changeEmail'
 }) {
   const [formType, setFormType] = useState(initialFormType);
   const [currentUserType, setCurrentUserType] = useState(initialUserType);
   const { signupEmail } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
+
+  // Keep internal state aligned with the requested state whenever the drawer opens.
+  useEffect(() => {
+    if (isOpen) {
+      setFormType(initialFormType);
+      setCurrentUserType(initialUserType);
+    }
+  }, [isOpen, initialFormType, initialUserType]);
 
   const handleLoginSuccess = () => {
     onClose();
@@ -50,27 +61,37 @@ export default function AuthDrawer({
     setFormType('login');
   };
 
+  const handleEmailUpdateSuccess = () => {
+    onClose();
+    setFormType('login');
+  };
+
   const handleClose = () => {
     onClose();
-    setTimeout(() => {
-      setFormType('login');
-    }, 300);
+  };
+
+  const userTypeLabel = {
+    reader: t('auth.reader'),
+    publisher: t('auth.publisher'),
+    admin: t('auth.admin'),
   };
 
   const getDrawerTitle = () => {
     switch (formType) {
       case 'login':
-        return `${currentUserType.charAt(0).toUpperCase() + currentUserType.slice(1)} Login`;
+        return `${userTypeLabel[currentUserType]} ${t('auth.signIn')}`;
       case 'signup':
-        return `${currentUserType.charAt(0).toUpperCase() + currentUserType.slice(1)} Sign Up`;
+        return `${userTypeLabel[currentUserType]} ${t('auth.signupTitle')}`;
       case 'otp':
-        return 'Verify Your Email';
+        return t('auth.otpTitle');
       case 'resetPassword':
-        return 'Reset Password';
+        return t('auth.resetPassword');
       case 'updateProfile':
-        return 'Edit Profile';
+        return t('auth.updateProfile');
       case 'updatePassword':
-        return 'Change Password';
+        return t('auth.updatePassword');
+      case 'changeEmail':
+        return t('profileDropdown.changeEmail');
       default:
         return '';
     }
@@ -125,6 +146,14 @@ export default function AuthDrawer({
           <UpdatePasswordForm
             userType={currentUserType}
             onSuccess={handlePasswordUpdateSuccess}
+            onCancel={handleClose}
+          />
+        );
+      case 'changeEmail':
+        return (
+          <UpdateEmailForm
+            userType={currentUserType}
+            onSuccess={handleEmailUpdateSuccess}
             onCancel={handleClose}
           />
         );

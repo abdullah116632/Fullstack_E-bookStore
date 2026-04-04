@@ -11,6 +11,9 @@ export const readerAuthService = {
   verifyResetOTP: (data) => apiClient.post(AUTH_ENDPOINTS.READER_VERIFY_RESET_OTP, data),
   resetPassword: (data) => apiClient.post(AUTH_ENDPOINTS.READER_RESET_PASSWORD, data),
   updatePassword: (data) => apiClient.put(AUTH_ENDPOINTS.READER_UPDATE_PASSWORD, data),
+  updateEmail: (data) => apiClient.post(AUTH_ENDPOINTS.READER_UPDATE_EMAIL, data),
+  sendEmailChangeOTP: (data) => apiClient.post(AUTH_ENDPOINTS.READER_SEND_EMAIL_CHANGE_OTP, data),
+  verifyEmailChangeOTP: (data) => apiClient.post(AUTH_ENDPOINTS.READER_VERIFY_EMAIL_CHANGE_OTP, data),
   getProfile: () => apiClient.get(AUTH_ENDPOINTS.READER_PROFILE),
   updateProfile: (data) => apiClient.put(AUTH_ENDPOINTS.READER_PROFILE, data),
 };
@@ -27,15 +30,29 @@ export const publisherAuthService = {
   updatePassword: (data) => apiClient.put(AUTH_ENDPOINTS.PUBLISHER_UPDATE_PASSWORD, data),
   getProfile: () => apiClient.get(AUTH_ENDPOINTS.PUBLISHER_PROFILE),
   updateProfile: (data) => apiClient.put(AUTH_ENDPOINTS.PUBLISHER_PROFILE, data),
+  uploadBook: (formData) =>
+    apiClient.post(AUTH_ENDPOINTS.PUBLISHER_UPLOAD_BOOK, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 };
 
 // ==================== ADMIN AUTH ====================
 
 export const adminAuthService = {
   login: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_LOGIN, data),
+  requestSignupOTP: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_REQUEST_SIGNUP_OTP, data),
+  verifySignupOTP: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_VERIFY_SIGNUP_OTP, data),
   forgotPassword: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_FORGOT_PASSWORD, data),
   verifyResetOTP: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_VERIFY_RESET_OTP, data),
   resetPassword: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_RESET_PASSWORD, data),
   updatePassword: (data) => apiClient.put(AUTH_ENDPOINTS.ADMIN_UPDATE_PASSWORD, data),
   getProfile: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_PROFILE),
+  getDashboard: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_DASHBOARD),
+  getAllBooks: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_BOOKS),
+  getAllReaders: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_READERS),
+  getAllPublishers: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_PUBLISHERS),
+  updateBookControls: (bookId, data) => apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_BOOKS}/${bookId}`, data),
+  deleteBook: (bookId) => apiClient.delete(`${AUTH_ENDPOINTS.ADMIN_BOOKS}/${bookId}`),
 };

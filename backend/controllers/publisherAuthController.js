@@ -128,10 +128,14 @@ export const verifyPublisherSignup = async (req, res, next) => {
       console.error('Failed to send welcome email:', emailError);
     }
 
+    const token = generateToken(publisher._id);
+
     res.status(HTTP_STATUS.OK).json({
       success: true,
-      message: 'Email verified successfully. Awaiting admin approval to activate your account.',
+      message: 'Email verified successfully. Welcome to your publisher dashboard.',
       data: {
+        token,
+        user: publisher.toJSON(),
         email: publisher.email,
         isApproved: publisher.isApproved,
         message: 'Admin will review your publisher account and approve it shortly.',

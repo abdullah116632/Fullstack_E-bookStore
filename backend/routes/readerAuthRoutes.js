@@ -8,6 +8,8 @@ import {
   readerResetPassword,
   readerUpdatePassword,
   readerUpdateProfile,
+  readerSendEmailChangeOTP,
+  readerVerifyEmailChangeOTP,
   getReaderProfile,
 } from '../controllers/readerAuthController.js';
 import { protect } from '../middlewares/auth.js';
@@ -21,6 +23,8 @@ import {
   resetPasswordValidation,
   updatePasswordValidation,
   updateProfileValidation,
+  requestEmailChangeOTPValidation,
+  verifyEmailChangeOTPValidation,
 } from '../validators/validation.js';
 
 const router = express.Router();
@@ -50,6 +54,12 @@ router.put('/update-password', protect, updatePasswordValidation, handleValidati
 
 // Update Profile (Protected) - PUT /profile
 router.put('/profile', protect, updateProfileValidation, handleValidationErrors, readerUpdateProfile);
+
+// Send OTP for Email Change (Protected)
+router.post('/update-email/send-otp', protect, requestEmailChangeOTPValidation, handleValidationErrors, readerSendEmailChangeOTP);
+
+// Verify OTP and Update Email (Protected)
+router.post('/update-email/verify-otp', protect, verifyEmailChangeOTPValidation, handleValidationErrors, readerVerifyEmailChangeOTP);
 
 // Get Profile (Protected)
 router.get('/profile', protect, getReaderProfile);
