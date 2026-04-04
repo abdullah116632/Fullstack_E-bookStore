@@ -152,7 +152,34 @@ export default function BookPreviewPage() {
 
         <div className="overflow-hidden rounded-2xl border border-white/12 bg-white shadow-lg">
           {isLoadingPreview && (
-            <div className="p-8 text-center text-slate-600">Loading preview...</div>
+            <div className="flex min-h-[60vh] items-center justify-center bg-linear-to-br from-slate-950 via-slate-900 to-cyan-950 px-6 py-12 text-center">
+              <div className="w-full max-w-md rounded-3xl border border-cyan-200/25 bg-linear-to-b from-white/15 to-white/5 p-8 shadow-2xl shadow-slate-950/40 backdrop-blur-md">
+                <div className="relative mx-auto mb-6 h-20 w-20">
+                  <div className="absolute inset-0 animate-spin rounded-full border-2 border-cyan-300/20 border-t-cyan-200" />
+                  <div className="absolute inset-2 animate-pulse rounded-full border border-cyan-200/30" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-9 w-9 rounded-lg bg-cyan-300/20 shadow-inner shadow-cyan-200/20" />
+                  </div>
+                </div>
+
+                <div className="mx-auto mb-5 flex w-28 items-end justify-center gap-1.5">
+                  <span className="h-8 w-2 animate-pulse rounded bg-cyan-200/80 [animation-delay:-0.3s]" />
+                  <span className="h-11 w-2 animate-pulse rounded bg-cyan-300/90 [animation-delay:-0.15s]" />
+                  <span className="h-14 w-2 animate-pulse rounded bg-cyan-100 [animation-delay:0s]" />
+                  <span className="h-11 w-2 animate-pulse rounded bg-cyan-300/90 [animation-delay:0.15s]" />
+                  <span className="h-8 w-2 animate-pulse rounded bg-cyan-200/80 [animation-delay:0.3s]" />
+                </div>
+
+                <h2 className="text-xl font-bold tracking-tight text-white">Book is loading, please wait</h2>
+                <p className="mt-2 text-sm leading-relaxed text-cyan-100/90">
+                  Turning pages for your preview and preparing the first 7 pages.
+                </p>
+
+                <div className="mt-6 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-1.5 w-1/2 animate-pulse rounded-full bg-linear-to-r from-cyan-200 via-cyan-300 to-blue-300" />
+                </div>
+              </div>
+            </div>
           )}
 
           {!isLoadingPreview && previewError && (

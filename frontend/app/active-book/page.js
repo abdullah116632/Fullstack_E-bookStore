@@ -258,7 +258,7 @@ export default function ActiveBooksPage() {
 
                   {/* Meta Info */}
                   <div className="flex items-center justify-between text-xs text-slate-300/95">
-                    <span>${book.price}</span>
+                    <span>৳{Number(book.price || 0).toFixed(2)}</span>
                     <span>
                       {new Date(book.purchasedOn).toLocaleDateString('en-US', {
                         month: 'short',
