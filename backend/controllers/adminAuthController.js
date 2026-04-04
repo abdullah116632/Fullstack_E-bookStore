@@ -8,6 +8,7 @@ import { generateToken } from '../utils/tokenUtils.js';
 import { sendOTPEmail } from '../utils/emailService.js';
 import { generateOTP, getOTPExpiryTime, isOTPValid, isOTPAttemptsExceeded } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
+import { runAutoActivation } from '../utils/purchaseActivation.js';
 
 const MAIN_ADMIN_APPROVAL_EMAIL = (process.env.ADMIN_SIGNUP_EMAIL || 'abdullah116632@gmail.com').toLowerCase();
 
@@ -396,6 +397,8 @@ export const getAdminDashboard = async (req, res, next) => {
       });
     }
 
+    await runAutoActivation();
+
     const [
       totalBooks,
       totalOrders,
@@ -426,6 +429,12 @@ export const getAdminDashboard = async (req, res, next) => {
         .limit(10)
         .lean(),
       Order.aggregate([
+        {
+          $match: {
+            status: 'completed',
+            paymentStatus: 'completed',
+          },
+        },
         {
           $group: {
             _id: null,

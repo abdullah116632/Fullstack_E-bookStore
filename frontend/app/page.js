@@ -15,7 +15,7 @@ import { bookService } from '@/services/bookService';
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated, userType } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authUserType, setAuthUserType] = useState('reader');
   const [authFormType, setAuthFormType] = useState('login');
@@ -66,13 +66,12 @@ export default function Home() {
   }, []);
 
   const handleBuyNow = (book) => {
-    if (!isAuthenticated || userType !== 'reader') {
-      toast.error('Please login as Reader to buy books');
-      handleLoginClick();
+    if (!book?._id) {
+      toast.error('Book is not available for purchase right now');
       return;
     }
 
-    toast.success(`Purchase flow for \"${book.title}\" will be added next`);
+    router.push(`/purchase/${book._id}`);
   };
 
   const handleReadFewPages = (book) => {

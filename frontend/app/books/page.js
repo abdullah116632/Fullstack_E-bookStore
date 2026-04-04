@@ -15,7 +15,7 @@ import { bookService } from '@/services/bookService';
 
 export default function BooksPage() {
   const router = useRouter();
-  const { isAuthenticated, userType } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const { t } = useTranslation();
 
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
@@ -71,13 +71,12 @@ export default function BooksPage() {
   };
 
   const handleBuyNow = (book) => {
-    if (!isAuthenticated || userType !== 'reader') {
-      toast.error('Please login as Reader to buy books');
-      handleLoginClick();
+    if (!book?._id) {
+      toast.error('Book is not available for purchase right now');
       return;
     }
 
-    toast.success(`Purchase flow for "${book.title}" will be added next`);
+    router.push(`/purchase/${book._id}`);
   };
 
   const handlePreview = (book) => {
@@ -103,16 +102,6 @@ export default function BooksPage() {
       <main className="relative flex-1 overflow-hidden bg-transparent pt-8 pb-16">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-90 bg-linear-to-b from-slate-950 via-slate-900 to-transparent" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.section
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-3xl border border-white/10 bg-slate-900/55 p-7 shadow-xl shadow-slate-900/30 backdrop-blur-md"
-          >
-            <h1 className="text-3xl font-bold text-white sm:text-4xl">{t('nav.allBooks')}</h1>
-            <p className="mt-2 text-slate-200/95">
-              Explore books available on the marketplace before purchase.
-            </p>
-          </motion.section>
 
           <motion.section
             initial={{ opacity: 0, y: 10 }}

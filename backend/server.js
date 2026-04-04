@@ -11,7 +11,10 @@ import adminAuthRoutes from './routes/adminAuthRoutes.js';
 import publisherBookRoutes from './routes/publisherBookRoutes.js';
 import adminBookRoutes from './routes/adminBookRoutes.js';
 import adminUserRoutes from './routes/adminUserRoutes.js';
+import adminPurchaseRoutes from './routes/adminPurchaseRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
+import purchaseRoutes from './routes/purchaseRoutes.js';
+import { startAutoActivationJob } from './utils/purchaseActivation.js';
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +54,7 @@ const corsOriginValidator = (origin, callback) => {
 
 // Connect Database
 connectDB();
+startAutoActivationJob();
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -78,7 +82,9 @@ app.use('/api/v1/auth/admin', adminAuthRoutes);
 app.use('/api/v1/publisher/books', publisherBookRoutes);
 app.use('/api/v1/admin/books', adminBookRoutes);
 app.use('/api/v1/admin/users', adminUserRoutes);
+app.use('/api/v1/admin/purchases', adminPurchaseRoutes);
 app.use('/api/v1/books', bookRoutes);
+app.use('/api/v1/purchases', purchaseRoutes);
 // app.use('/api/v1/orders', orderRoutes);
 // app.use('/api/v1/users', userRoutes);
 // app.use('/api/v1/reviews', reviewRoutes);

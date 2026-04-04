@@ -55,4 +55,7 @@ export const adminAuthService = {
   getAllPublishers: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_PUBLISHERS),
   updateBookControls: (bookId, data) => apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_BOOKS}/${bookId}`, data),
   deleteBook: (bookId) => apiClient.delete(`${AUTH_ENDPOINTS.ADMIN_BOOKS}/${bookId}`),
+  getAllPurchases: (status = 'all') => apiClient.get(`${AUTH_ENDPOINTS.ADMIN_PURCHASES}?status=${status}`),
+  approvePurchase: (purchaseId) => apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_PURCHASES}/${purchaseId}/approve`),
+  deactivatePurchase: (purchaseId, data) => apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_PURCHASES}/${purchaseId}/deactivate`, data),
 };

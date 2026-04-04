@@ -5,54 +5,38 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { IoBook, IoArrowBack, IoEye, IoDownload, IoStarHalf } from 'react-icons/io5';
+import { IoBook, IoArrowBack, IoEye } from 'react-icons/io5';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import AuthDrawer from '@/components/auth/AuthDrawer';
 import Button from '@/components/common/Button';
 import { useTranslation } from '@/hooks/useTranslation';
-
-// Dummy data - Replace with real API call
-const PURCHASED_BOOKS = [
-  {
-    _id: '1',
-    title: 'The Great Gatsby',
-    author: 'F. Scott Fitzgerald',
-    coverImage: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop',
-    purchasedOn: '2024-03-15',
-    price: 9.99,
-    rating: 4.5,
-  },
-  {
-    _id: '2',
-    title: 'To Kill a Mockingbird',
-    author: 'Harper Lee',
-    coverImage: 'https://images.unsplash.com/photo-1507842217343-583f20270319?w=400&h=600&fit=crop',
-    purchasedOn: '2024-02-28',
-    price: 8.99,
-    rating: 4.8,
-  },
-  {
-    _id: '3',
-    title: '1984',
-    author: 'George Orwell',
-    coverImage: 'https://images.unsplash.com/photo-1543002588-d83a5b814b5d?w=400&h=600&fit=crop',
-    purchasedOn: '2024-01-10',
-    price: 10.99,
-    rating: 4.6,
-  },
-];
+import { purchaseService } from '@/services/purchaseService';
 
 export default function ActiveBooksPage() {
   const router = useRouter();
   const { isAuthenticated, user, userType } = useSelector((state) => state.auth);
-  const [books, setBooks] = useState(PURCHASED_BOOKS);
+  const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authUserType, setAuthUserType] = useState('reader');
   const [authFormType, setAuthFormType] = useState('login');
   const [isChecking, setIsChecking] = useState(true);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
   const { t } = useTranslation();
+  const isReaderLoggedIn = isAuthenticated && userType === 'reader';
+
+  const fetchPurchasedBooks = async () => {
+    try {
+      setLoading(true);
+      const response = await purchaseService.getMyPurchasedBooks();
+      setBooks(response.data?.data?.books || []);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load purchased books');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Check authentication on mount
   useEffect(() => {
@@ -63,6 +47,7 @@ export default function ActiveBooksPage() {
         
         // First check Redux state
         if (isAuthenticated && userType === 'reader') {
+          await fetchPurchasedBooks();
           setIsChecking(false);
           return;
         }
@@ -73,25 +58,17 @@ export default function ActiveBooksPage() {
         
         if (authToken && storedUserType === 'reader') {
           // Auth exists in localStorage, it will be restored
+          await fetchPurchasedBooks();
           setIsChecking(false);
           return;
         }
-
-        // No authentication found
-        const isIntentionalLogout = sessionStorage.getItem('intentionalLogout') === '1';
-        if (isIntentionalLogout) {
-          sessionStorage.removeItem('intentionalLogout');
-        } else {
-          toast.error('Please login as a reader to access this page');
-        }
-        router.push('/');
       } finally {
         setIsChecking(false);
       }
     };
 
     checkAuth();
-  }, [isAuthenticated, userType, router, t]);
+  }, [isAuthenticated, userType]);
 
   const handleLoginClick = () => {
     setAuthUserType('reader');
@@ -120,17 +97,19 @@ export default function ActiveBooksPage() {
     setAuthDrawerOpen(true);
   };
 
-  const handleReadBook = (bookId) => {
-    toast.success(t('myBooks.openBookReader'));
-    // TODO: Implement actual book reader functionality
-  };
+  const handleReadBook = (book) => {
+    if (!book?.isUnlocked) {
+      setShowVerifyModal(true);
+      return;
+    }
 
-  const handleDownloadBook = (bookId) => {
-    toast.loading(t('myBooks.downloadingBook'));
-    setTimeout(() => {
-      toast.dismiss();
-      toast.success(t('myBooks.bookDownloaded'));
-    }, 2000);
+    if (!book?.fileUrl) {
+      toast.error('Book file is not available right now');
+      return;
+    }
+
+    const encodedTitle = encodeURIComponent(book.title || 'Book Reader');
+    router.push(`/read/${book._id}?title=${encodedTitle}`);
   };
 
   const containerVariants = {
@@ -213,7 +192,28 @@ export default function ActiveBooksPage() {
         </motion.div>
 
         {/* Books Grid */}
-        {books.length > 0 ? (
+        {!isReaderLoggedIn ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md"
+          >
+            <IoBook className="mx-auto mb-4 text-5xl text-slate-300" />
+            <h2 className="mb-2 text-xl font-bold text-white">To see your book, first login</h2>
+            <p className="mb-6 text-slate-300">Please login with a reader account to access your purchased books.</p>
+            <Button
+              variant="primary"
+              onClick={handleLoginClick}
+            >
+              Login
+            </Button>
+          </motion.div>
+        ) : loading ? (
+          <div className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2 border-cyan-300" />
+            <p className="mt-4 text-slate-300">Loading purchased books...</p>
+          </div>
+        ) : books.length > 0 ? (
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -243,17 +243,9 @@ export default function ActiveBooksPage() {
                       {book.title}
                     </h3>
                     <p className="mt-1 text-xs text-slate-300/95">{book.author}</p>
-                  </div>
-
-                  {/* Rating */}
-                  <div className="flex items-center gap-1">
-                    <div className="flex items-center text-amber-500">
-                      {Array.from({ length: Math.floor(book.rating) }).map((_, i) => (
-                        <span key={i}>★</span>
-                      ))}
-                      {book.rating % 1 !== 0 && <IoStarHalf />}
-                    </div>
-                    <span className="text-xs text-slate-300/95">({book.rating})</span>
+                    <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${book.isUnlocked ? 'bg-emerald-300/15 text-emerald-200 border border-emerald-300/40' : 'bg-amber-300/15 text-amber-200 border border-amber-300/40'}`}>
+                      {book.isUnlocked ? 'Unlocked' : 'Under Verify'}
+                    </span>
                   </div>
 
                   {/* Meta Info */}
@@ -273,19 +265,11 @@ export default function ActiveBooksPage() {
                     <Button
                       variant="primary"
                       size="sm"
-                      className="flex-1 gap-1.5"
-                      onClick={() => handleReadBook(book._id)}
+                      className="w-full gap-1.5"
+                      onClick={() => handleReadBook(book)}
                     >
                       <IoEye className="text-sm" />
                       <span className="hidden sm:inline">{t('myBooks.read')}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => handleDownloadBook(book._id)}
-                    >
-                      <IoDownload className="text-sm" />
                     </Button>
                   </div>
                 </div>
@@ -299,8 +283,8 @@ export default function ActiveBooksPage() {
             className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md"
           >
             <IoBook className="mx-auto mb-4 text-5xl text-slate-300" />
-            <h2 className="mb-2 text-xl font-bold text-white">{t('myBooks.noBooks')}</h2>
-            <p className="mb-6 text-slate-300">{t('myBooks.noBookDescription')}</p>
+            <h2 className="mb-2 text-xl font-bold text-white">You dont buyed any book</h2>
+            <p className="mb-6 text-slate-300">Buy books from the store and they will appear here.</p>
             <Button
               variant="primary"
               onClick={() => router.push('/')}
@@ -320,6 +304,22 @@ export default function ActiveBooksPage() {
         initialUserType={authUserType}
         initialFormType={authFormType}
       />
+
+      {showVerifyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-amber-300/45 bg-slate-900 p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-amber-200">Purchase Verification</h3>
+            <p className="mt-3 text-sm text-slate-200">
+              your purches for this book is under verification it will unlock very soon after check within 1 hour
+            </p>
+            <div className="mt-5 flex justify-end">
+              <Button variant="primary" size="sm" onClick={() => setShowVerifyModal(false)}>
+                OK
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

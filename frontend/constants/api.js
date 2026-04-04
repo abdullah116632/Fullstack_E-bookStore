@@ -48,6 +48,13 @@ export const AUTH_ENDPOINTS = {
   // Public Books
   BOOKS_PUBLIC: '/books',
   BOOKS_FEATURED: '/books/featured',
+  BOOKS_BY_ID: '/books',
+
+  // Purchases
+  PURCHASES: '/purchases',
+  PURCHASES_MY_UNLOCKED: '/purchases/my-unlocked',
+  PURCHASES_MY_BOOKS: '/purchases/my-books',
+  ADMIN_PURCHASES: '/admin/purchases',
 
   // Health Check
   HEALTH: '/health',

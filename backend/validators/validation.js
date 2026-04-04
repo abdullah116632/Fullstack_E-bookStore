@@ -110,6 +110,17 @@ export const orderValidation = [
   body('paymentMethod').notEmpty().withMessage('Payment method is required').isIn(['credit-card', 'debit-card', 'paypal', 'stripe']),
 ];
 
+export const createManualPurchaseValidation = [
+  body('bookId').isMongoId().withMessage('Valid book ID is required'),
+  body('paymentMethod').isIn(['bkash', 'nagad', 'rocket', 'upay']).withMessage('Invalid mobile banking account'),
+  body('senderMobileNumber')
+    .trim()
+    .matches(/^\d{11}$/)
+    .withMessage('Sender mobile number must be exactly 11 digits'),
+  body('transactionId').trim().isLength({ min: 6, max: 100 }).withMessage('Transaction ID must be between 6 and 100 characters'),
+  body('email').optional().isEmail().withMessage('Please provide a valid email'),
+];
+
 export const idValidation = [param('id').isMongoId().withMessage('Invalid ID format')];
 
 export const paginationValidation = [

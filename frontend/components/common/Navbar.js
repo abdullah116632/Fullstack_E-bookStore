@@ -58,24 +58,15 @@ export default function Navbar({
               {t('nav.allBooks')}
             </Link>
 
-            {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+            <Link
+              href="/active-book"
+              className="rounded-xl border border-transparent bg-slate-100/80 px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
             >
-              {language === 'en' ? 'বাংলা' : 'English'}
-            </button>
+              {t('nav.yourBooks')}
+            </Link>
 
             {isAuthenticated ? (
               <>
-                {userType === 'reader' && (
-                  <Link
-                    href="/active-book"
-                    className="rounded-xl border border-transparent bg-slate-100/80 px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
-                  >
-                    {t('nav.yourBooks')}
-                  </Link>
-                )}
                 <ProfileDropdown 
                   onEditProfile={onEditProfile}
                   onUpdatePassword={onUpdatePassword}
@@ -100,6 +91,14 @@ export default function Navbar({
                 </Button>
               </>
             )}
+
+            {/* Language Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+            >
+              {language === 'en' ? 'বাংলা' : 'English'}
+            </button>
           </div>
 
           {/* Mobile Menu Button & Language Toggle */}
@@ -166,6 +165,13 @@ export default function Navbar({
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('nav.allBooks')}
+                </Link>
+                <Link
+                  href="/active-book"
+                  className="mb-3 block rounded-lg px-4 py-3 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:bg-teal-50 hover:text-teal-700"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('nav.yourBooks')}
                 </Link>
                 <Button
                   variant="outline"

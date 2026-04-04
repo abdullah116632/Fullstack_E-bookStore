@@ -21,14 +21,19 @@ export default function AdminPage() {
   const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateAdmin, setShowCreateAdmin] = useState(false);
-  const [activePanel, setActivePanel] = useState('overview');
+  const [activePanel, setActivePanel] = useState('books');
   const [createStep, setCreateStep] = useState('form');
   const [createLoading, setCreateLoading] = useState(false);
   const [createErrors, setCreateErrors] = useState({});
   const [bookList, setBookList] = useState([]);
   const [readerList, setReaderList] = useState([]);
   const [publisherList, setPublisherList] = useState([]);
+  const [purchaseList, setPurchaseList] = useState([]);
+  const [purchaseFilter, setPurchaseFilter] = useState('all');
   const [bookActionLoadingId, setBookActionLoadingId] = useState('');
+  const [purchaseActionLoadingId, setPurchaseActionLoadingId] = useState('');
+  const [expandedBookIds, setExpandedBookIds] = useState([]);
+  const [expandedPurchaseIds, setExpandedPurchaseIds] = useState([]);
   const [createForm, setCreateForm] = useState({
     fullName: '',
     email: '',
@@ -95,11 +100,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleBookCardClick = async () => {
-    setActivePanel('books');
-    await fetchAllBooks();
-  };
-
   const fetchAllReaders = async () => {
     try {
       setIsLoading(true);
@@ -124,14 +124,72 @@ export default function AdminPage() {
     }
   };
 
-  const handleUsersCardClick = async () => {
-    setActivePanel('users');
-    await fetchAllReaders();
+  const fetchAllPurchases = async (status = purchaseFilter) => {
+    try {
+      setIsLoading(true);
+      const response = await adminAuthService.getAllPurchases(status);
+      setPurchaseList(response.data?.data?.purchases || []);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to load purchases');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePublishersCardClick = async () => {
-    setActivePanel('publishers');
-    await fetchAllPublishers();
+  const handleActivatePurchase = async (purchase) => {
+    try {
+      setPurchaseActionLoadingId(purchase._id);
+      await adminAuthService.approvePurchase(purchase._id);
+      toast.success(`Activated ${purchase.orderNumber}`);
+      await fetchAllPurchases(purchaseFilter);
+      await fetchDashboard();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to activate purchase');
+    } finally {
+      setPurchaseActionLoadingId('');
+    }
+  };
+
+  const handleDeactivatePurchase = async (purchase) => {
+    const reason = window.prompt('Optional reason for deactivation:', 'Payment verification issue') || undefined;
+    const confirmed = window.confirm(`Deactivate ${purchase.orderNumber} and lock access again?`);
+    if (!confirmed) return;
+
+    try {
+      setPurchaseActionLoadingId(purchase._id);
+      await adminAuthService.deactivatePurchase(purchase._id, { reason });
+      toast.success(`Deactivated ${purchase.orderNumber}`);
+      await fetchAllPurchases(purchaseFilter);
+      await fetchDashboard();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to deactivate purchase');
+    } finally {
+      setPurchaseActionLoadingId('');
+    }
+  };
+
+  const handleSidebarSelect = async (panel) => {
+    setActivePanel(panel);
+
+    if (panel === 'books') {
+      await fetchAllBooks();
+      return;
+    }
+
+    if (panel === 'sales') {
+      setPurchaseFilter('all');
+      await fetchAllPurchases('all');
+      return;
+    }
+
+    if (panel === 'users') {
+      await fetchAllReaders();
+      return;
+    }
+
+    if (panel === 'publishers') {
+      await fetchAllPublishers();
+    }
   };
 
   const handleToggleFeatured = async (book) => {
@@ -179,9 +237,22 @@ export default function AdminPage() {
     }
   };
 
+  const toggleBookExpand = (bookId) => {
+    setExpandedBookIds((prev) =>
+      prev.includes(bookId) ? prev.filter((id) => id !== bookId) : [...prev, bookId]
+    );
+  };
+
+  const togglePurchaseExpand = (purchaseId) => {
+    setExpandedPurchaseIds((prev) =>
+      prev.includes(purchaseId) ? prev.filter((id) => id !== purchaseId) : [...prev, purchaseId]
+    );
+  };
+
   useEffect(() => {
     if (hasAdminAccess) {
       fetchDashboard();
+      handleSidebarSelect('books');
     }
   }, [hasAdminAccess]);
 
@@ -291,44 +362,45 @@ export default function AdminPage() {
     toast.success('Logged out successfully');
   };
 
-  const statCards = [
+  const sidebarItems = [
     {
       key: 'books',
       title: 'All Books',
-      value: dashboard.stats.totalBooks,
       icon: <FaBookOpen className="text-2xl text-cyan-600" />,
-      tone: 'border-cyan-200 bg-cyan-50/80',
-      onClick: handleBookCardClick,
+      count: dashboard.stats.totalBooks,
+      tone: 'text-cyan-700',
     },
     {
       key: 'sales',
       title: 'All Sales',
-      value: dashboard.stats.totalSales,
       icon: <FaChartLine className="text-2xl text-teal-600" />,
-      tone: 'border-teal-200 bg-teal-50/80',
-      onClick: () => setActivePanel('overview'),
+      count: dashboard.stats.totalSales,
+      tone: 'text-teal-700',
     },
     {
       key: 'users',
       title: 'All Users',
-      value: dashboard.stats.totalUsers,
       icon: <FaUsers className="text-2xl text-emerald-600" />,
-      tone: 'border-emerald-200 bg-emerald-50/80',
-      onClick: handleUsersCardClick,
+      count: dashboard.stats.totalUsers,
+      tone: 'text-emerald-700',
     },
     {
       key: 'publishers',
       title: 'All Publishers',
-      value: dashboard.stats.totalPublishers,
       icon: <FaUserTie className="text-2xl text-orange-600" />,
-      tone: 'border-orange-200 bg-orange-50/80',
-      onClick: handlePublishersCardClick,
+      count: dashboard.stats.totalPublishers,
+      tone: 'text-orange-700',
     },
   ];
 
   const formatDate = (value) => {
     if (!value) return '-';
     return new Date(value).toLocaleDateString('en-GB');
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return '-';
+    return new Date(value).toLocaleString('en-GB');
   };
 
   return (
@@ -370,38 +442,44 @@ export default function AdminPage() {
             <p className="mt-4 text-slate-600">Checking admin access...</p>
           </div>
         ) : hasAdminAccess ? (
-          <div className="space-y-8">
-            <section className="relative overflow-hidden rounded-3xl border border-cyan-200/40 bg-linear-to-r from-slate-900 via-cyan-900 to-teal-900 p-8 text-white shadow-2xl shadow-cyan-900/20">
-              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan-400/20 blur-2xl" />
-              <div className="absolute -left-8 bottom-0 h-28 w-28 rounded-full bg-teal-300/20 blur-2xl" />
-              <div className="relative">
-                <h2 className="text-2xl font-bold tracking-tight">System Overview</h2>
-                <p className="mt-2 max-w-2xl text-cyan-100/95">
-                  Monitor platform-wide books, sales, users, and publishers from one place.
-                </p>
-                <p className="mt-4 text-sm font-semibold text-cyan-100">
-                  Total Revenue: ${Number(dashboard.stats.totalRevenue || 0).toFixed(2)}
-                </p>
+          <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+            <aside className="h-fit rounded-3xl border border-slate-200/70 bg-white/88 p-4 shadow-lg shadow-slate-300/20 backdrop-blur-md">
+              <h2 className="px-2 pb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Dashboard Menu</h2>
+              <div className="space-y-2">
+                {sidebarItems.map((item) => {
+                  const isActive = activePanel === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => handleSidebarSelect(item.key)}
+                      className={`w-full rounded-2xl border px-3 py-3 text-left transition ${
+                        isActive
+                          ? 'border-cyan-300 bg-cyan-50 shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-cyan-200 hover:bg-cyan-50/60'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          {item.icon}
+                          <span className={`text-sm font-semibold ${isActive ? 'text-cyan-900' : 'text-slate-800'}`}>{item.title}</span>
+                        </div>
+                        <span className={`text-xs font-bold ${item.tone}`}>{item.count}</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-            </section>
 
-            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              {statCards.map((card) => (
-                <button
-                  key={card.key}
-                  type="button"
-                  onClick={card.onClick}
-                  className={`rounded-2xl border p-6 text-left shadow-md backdrop-blur-md transition hover:-translate-y-0.5 hover:shadow-lg ${card.tone}`}
-                >
-                  {card.icon}
-                  <h3 className="mt-4 text-sm font-semibold uppercase tracking-wide text-slate-700">{card.title}</h3>
-                  <p className="mt-1 text-3xl font-bold text-slate-900">{card.value}</p>
-                </button>
-              ))}
-            </section>
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">Total Revenue</p>
+                <p className="mt-1 text-lg font-bold text-slate-900">${Number(dashboard.stats.totalRevenue || 0).toFixed(2)}</p>
+              </div>
+            </aside>
 
+            <section className="rounded-3xl border border-slate-200/70 bg-white/86 p-6 shadow-lg shadow-slate-300/20 backdrop-blur-md">
             {activePanel === 'books' && (
-              <section className="rounded-3xl border border-slate-200/70 bg-white/86 p-6 shadow-lg shadow-slate-300/20 backdrop-blur-md">
+              <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-lg font-bold text-slate-900">All Books List</h3>
                   <Button variant="outline" size="sm" onClick={fetchAllBooks} isLoading={isLoading}>
@@ -420,48 +498,165 @@ export default function AdminPage() {
                             <p className="text-sm font-semibold text-slate-900">{book.title}</p>
                             <p className="text-xs text-slate-600">Author: {book.author}</p>
                             <p className="text-xs text-slate-600">Publisher: {book.publisher?.publisherName || '-'}</p>
-                            <p className="text-xs text-slate-500">Visibility: {book.visibility}</p>
-                            <p className="text-xs text-slate-500">Featured: {book.isFeatured ? 'ON' : 'OFF'}</p>
                           </div>
 
-                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                          <div className="flex items-center gap-2">
                             <Button
-                              variant={book.isFeatured ? 'secondary' : 'primary'}
+                              variant="outline"
                               size="sm"
-                              onClick={() => handleToggleFeatured(book)}
-                              isLoading={bookActionLoadingId === book._id}
+                              onClick={() => toggleBookExpand(book._id)}
                             >
-                              Featured {book.isFeatured ? 'OFF' : 'ON'}
-                            </Button>
-                            <Button
-                              variant={book.visibility === 'public' ? 'secondary' : 'primary'}
-                              size="sm"
-                              onClick={() => handleToggleVisibility(book)}
-                              isLoading={bookActionLoadingId === book._id}
-                            >
-                              Visibility {book.visibility === 'public' ? 'OFF' : 'ON'}
-                            </Button>
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              onClick={() => handleDeleteBook(book)}
-                              isLoading={bookActionLoadingId === book._id}
-                              className="gap-1.5"
-                            >
-                              <IoTrash />
-                              Delete
+                              {expandedBookIds.includes(book._id) ? 'Hide Details' : 'Expand'}
                             </Button>
                           </div>
                         </div>
+
+                        {expandedBookIds.includes(book._id) && (
+                          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                            <p className="text-xs text-slate-600">Visibility: {book.visibility}</p>
+                            <p className="text-xs text-slate-600">Featured: {book.isFeatured ? 'ON' : 'OFF'}</p>
+                            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                              <Button
+                                variant={book.isFeatured ? 'secondary' : 'primary'}
+                                size="sm"
+                                onClick={() => handleToggleFeatured(book)}
+                                isLoading={bookActionLoadingId === book._id}
+                              >
+                                Featured {book.isFeatured ? 'OFF' : 'ON'}
+                              </Button>
+                              <Button
+                                variant={book.visibility === 'public' ? 'secondary' : 'primary'}
+                                size="sm"
+                                onClick={() => handleToggleVisibility(book)}
+                                isLoading={bookActionLoadingId === book._id}
+                              >
+                                Visibility {book.visibility === 'public' ? 'OFF' : 'ON'}
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => handleDeleteBook(book)}
+                                isLoading={bookActionLoadingId === book._id}
+                                className="gap-1.5"
+                              >
+                                <IoTrash />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
                 </div>
-              </section>
+              </div>
+            )}
+
+            {activePanel === 'sales' && (
+              <div>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-lg font-bold text-slate-900">All Purchases Verification List</h3>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={purchaseFilter}
+                      onChange={async (event) => {
+                        const nextFilter = event.target.value;
+                        setPurchaseFilter(nextFilter);
+                        await fetchAllPurchases(nextFilter);
+                      }}
+                      className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="all">All</option>
+                    </select>
+                    <Button variant="outline" size="sm" onClick={() => fetchAllPurchases(purchaseFilter)} isLoading={isLoading}>
+                      Refresh List
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {purchaseList.length === 0 ? (
+                    <p className="text-sm text-slate-500">No purchases found for this filter.</p>
+                  ) : (
+                    purchaseList.map((purchase) => {
+                      const book = purchase.books?.[0]?.bookId;
+                      const isApproved = Boolean(purchase.accessControl?.isUnlocked);
+                      const isDeactivated = purchase.status === 'cancelled' && !isApproved;
+
+                      return (
+                        <div key={purchase._id} className="rounded-xl border border-slate-200 p-4">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-900">{purchase.orderNumber}</p>
+                              <p className="text-xs text-slate-600">Phone: {purchase.paymentDetails?.senderMobileNumber || '-'}</p>
+                              <p className="text-xs text-slate-600">Gateway: {String(purchase.paymentDetails?.gateway || purchase.paymentMethod || '-').toUpperCase()}</p>
+                              <p className="text-xs text-slate-600">Transaction ID: {purchase.paymentDetails?.transactionId || '-'}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => togglePurchaseExpand(purchase._id)}
+                              >
+                                {expandedPurchaseIds.includes(purchase._id) ? 'Hide Details' : 'Expand'}
+                              </Button>
+                              {isApproved ? (
+                                <>
+                                  <span className="inline-flex rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                    Approved
+                                  </span>
+                                  <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => handleDeactivatePurchase(purchase)}
+                                    isLoading={purchaseActionLoadingId === purchase._id}
+                                  >
+                                    Deactivate
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleActivatePurchase(purchase)}
+                                  isLoading={purchaseActionLoadingId === purchase._id}
+                                >
+                                  Activate & Unlock
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+
+                          {expandedPurchaseIds.includes(purchase._id) && (
+                            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                              <p className="text-xs text-slate-600">Book: {book?.title || '-'}</p>
+                              <p className="text-xs text-slate-600">Buyer: {purchase.buyer?.fullName || '-'} ({purchase.buyerEmail})</p>
+                              <p className="text-xs text-slate-600">Submitted: {formatDateTime(purchase.createdAt)}</p>
+                              <p className="text-xs text-slate-600">Receiver Number: {purchase.paymentDetails?.receiverMobileNumber || '-'}</p>
+                              <p className="text-xs text-slate-500">Amount: ৳{Number(purchase.finalAmount || 0).toFixed(2)}</p>
+                              <p className="text-xs text-slate-500">
+                                Status: {isApproved ? 'Approved & Unlocked' : isDeactivated ? 'Deactivated by Admin' : 'Pending Approval'}
+                              </p>
+                              <p className="text-xs text-slate-500">Activation Mode: {purchase.accessControl?.autoActivated ? 'Auto (1 hour)' : isApproved ? 'Manual by Admin' : '-'}</p>
+                              <p className="text-xs text-slate-500">Approved At: {formatDateTime(purchase.accessControl?.approvedAt)}</p>
+                              <p className="text-xs text-slate-500">Approved By: {purchase.accessControl?.approvedBy?.fullName || '-'}</p>
+                              <p className="text-xs text-slate-500">Deactivated At: {formatDateTime(purchase.accessControl?.deactivatedAt)}</p>
+                              <p className="text-xs text-slate-500">Deactivated Reason: {purchase.accessControl?.deactivatedReason || '-'}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             )}
 
             {activePanel === 'users' && (
-              <section className="rounded-3xl border border-slate-200/70 bg-white/86 p-6 shadow-lg shadow-slate-300/20 backdrop-blur-md">
+              <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-lg font-bold text-slate-900">All Readers List</h3>
                   <Button variant="outline" size="sm" onClick={fetchAllReaders} isLoading={isLoading}>
@@ -483,11 +678,11 @@ export default function AdminPage() {
                     ))
                   )}
                 </div>
-              </section>
+              </div>
             )}
 
             {activePanel === 'publishers' && (
-              <section className="rounded-3xl border border-slate-200/70 bg-white/86 p-6 shadow-lg shadow-slate-300/20 backdrop-blur-md">
+              <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-lg font-bold text-slate-900">All Publishers List</h3>
                   <Button variant="outline" size="sm" onClick={fetchAllPublishers} isLoading={isLoading}>
@@ -510,62 +705,8 @@ export default function AdminPage() {
                     ))
                   )}
                 </div>
-              </section>
+              </div>
             )}
-
-            <section className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-3xl border border-slate-200/70 bg-white/86 p-6 shadow-lg shadow-slate-300/20 backdrop-blur-md">
-                <h3 className="text-lg font-bold text-slate-900">Recent Books</h3>
-                <div className="mt-4 space-y-3">
-                  {dashboard.books.length === 0 ? (
-                    <p className="text-sm text-slate-500">No books found.</p>
-                  ) : (
-                    dashboard.books.map((book) => (
-                      <div key={book._id} className="rounded-xl border border-slate-200 px-3 py-2">
-                        <p className="text-sm font-semibold text-slate-800">{book.title}</p>
-                        <p className="text-xs text-slate-500">{book.author}</p>
-                        <p className="text-xs text-slate-500">Publisher: {book.publisher?.publisherName || '-'}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-slate-200/70 bg-white/86 p-6 shadow-lg shadow-slate-300/20 backdrop-blur-md">
-                <h3 className="text-lg font-bold text-slate-900">Recent Users</h3>
-                <div className="mt-4 space-y-3">
-                  {dashboard.users.length === 0 ? (
-                    <p className="text-sm text-slate-500">No users found.</p>
-                  ) : (
-                    dashboard.users.map((reader) => (
-                      <div key={reader._id} className="rounded-xl border border-slate-200 px-3 py-2">
-                        <p className="text-sm font-semibold text-slate-800">{reader.fullName}</p>
-                        <p className="text-xs text-slate-500">{reader.email}</p>
-                        <p className="text-xs text-slate-500">Joined: {formatDate(reader.createdAt)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-slate-200/70 bg-white/86 p-6 shadow-lg shadow-slate-300/20 backdrop-blur-md">
-                <h3 className="text-lg font-bold text-slate-900">Recent Publishers</h3>
-                <div className="mt-4 space-y-3">
-                  {dashboard.publishers.length === 0 ? (
-                    <p className="text-sm text-slate-500">No publishers found.</p>
-                  ) : (
-                    dashboard.publishers.map((publisher) => (
-                      <div key={publisher._id} className="rounded-xl border border-slate-200 px-3 py-2">
-                        <p className="text-sm font-semibold text-slate-800">{publisher.publisherName}</p>
-                        <p className="text-xs text-slate-500">{publisher.email}</p>
-                        <p className="text-xs text-slate-500">
-                          Status: {publisher.isApproved ? 'Approved' : 'Pending Approval'}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
             </section>
           </div>
         ) : (

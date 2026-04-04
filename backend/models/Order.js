@@ -6,12 +6,18 @@ const orderSchema = new mongoose.Schema(
     orderNumber: {
       type: String,
       unique: true,
-      required: true,
+      sparse: true,
     },
     buyer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Reader',
       required: [true, 'Buyer is required'],
+    },
+    buyerEmail: {
+      type: String,
+      required: [true, 'Buyer email is required'],
+      lowercase: true,
+      trim: true,
     },
     books: [
       {
@@ -60,33 +66,47 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ['credit-card', 'debit-card', 'paypal', 'stripe'],
+      enum: ['bkash', 'nagad', 'rocket', 'upay'],
       required: true,
     },
     paymentDetails: {
-      transactionId: String,
-      gateway: String,
-      receiptUrl: String,
+      senderMobileNumber: {
+        type: String,
+        required: [true, 'Sender mobile number is required'],
+      },
+      transactionId: {
+        type: String,
+        required: [true, 'Transaction ID is required'],
+      },
+      gateway: {
+        type: String,
+        enum: ['bkash', 'nagad', 'rocket', 'upay'],
+      },
+      receiverMobileNumber: {
+        type: String,
+        default: '01768899941',
+      },
     },
-    shippingAddress: {
-      fullName: String,
-      phone: String,
-      email: String,
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
-      country: String,
-    },
-    billingAddress: {
-      fullName: String,
-      phone: String,
-      email: String,
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
-      country: String,
+    accessControl: {
+      isUnlocked: {
+        type: Boolean,
+        default: false,
+      },
+      autoActivated: {
+        type: Boolean,
+        default: false,
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admin',
+      },
+      approvedAt: Date,
+      deactivatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admin',
+      },
+      deactivatedAt: Date,
+      deactivatedReason: String,
     },
     notes: String,
     cancelReason: String,
@@ -114,7 +134,10 @@ orderSchema.pre('save', async function (next) {
 
 // Index for faster queries
 orderSchema.index({ buyer: 1, createdAt: -1 });
+orderSchema.index({ buyerEmail: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
+orderSchema.index({ 'books.bookId': 1, buyer: 1 });
+orderSchema.index({ 'paymentDetails.transactionId': 1 }, { unique: true, sparse: true });
 
 export default mongoose.model('Order', orderSchema);

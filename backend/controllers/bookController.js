@@ -64,6 +64,32 @@ export const getPublicBooks = async (req, res, next) => {
   }
 };
 
+export const getPublicBookById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const book = await Book.findOne({ _id: id, visibility: 'public' })
+      .select('title author coverImage price description pages language isFeatured fileUrl createdAt')
+      .lean();
+
+    if (!book) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Book not found.',
+      });
+    }
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: {
+        book,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getBookPreviewPdf = async (req, res, next) => {
   try {
     const { id } = req.params;
