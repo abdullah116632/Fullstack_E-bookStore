@@ -1,7 +1,7 @@
 import Admin from '../models/Admin.js';
 import AdminSignupRequest from '../models/AdminSignupRequest.js';
 import Book from '../models/Book.js';
-import Order from '../models/Order.js';
+import Purchase from '../models/Purchase.js';
 import Reader from '../models/Reader.js';
 import Publisher from '../models/Publisher.js';
 import { generateToken } from '../utils/tokenUtils.js';
@@ -410,7 +410,7 @@ export const getAdminDashboard = async (req, res, next) => {
       revenueAggregation,
     ] = await Promise.all([
       Book.countDocuments(),
-      Order.countDocuments(),
+      Purchase.countDocuments(),
       Reader.countDocuments(),
       Publisher.countDocuments(),
       Book.find({})
@@ -428,7 +428,7 @@ export const getAdminDashboard = async (req, res, next) => {
         .sort({ createdAt: -1 })
         .limit(10)
         .lean(),
-      Order.aggregate([
+      Purchase.aggregate([
         {
           $match: {
             status: 'completed',

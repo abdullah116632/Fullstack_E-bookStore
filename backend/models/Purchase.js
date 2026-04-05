@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../config/constants.js';
 
-const orderSchema = new mongoose.Schema(
+const purchaseSchema = new mongoose.Schema(
   {
     orderNumber: {
       type: String,
@@ -119,11 +119,11 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Auto-generate order number before saving
-orderSchema.pre('save', async function (next) {
+purchaseSchema.pre('save', async function (next) {
   if (!this.isNew) return next();
 
   try {
-    const count = await mongoose.model('Order').countDocuments();
+    const count = await mongoose.model('Purchase').countDocuments();
     const year = new Date().getFullYear();
     this.orderNumber = `ORD-${year}-${String(count + 1).padStart(6, '0')}`;
     next();
@@ -133,11 +133,11 @@ orderSchema.pre('save', async function (next) {
 });
 
 // Index for faster queries
-orderSchema.index({ buyer: 1, createdAt: -1 });
-orderSchema.index({ buyerEmail: 1, createdAt: -1 });
-orderSchema.index({ status: 1 });
-orderSchema.index({ paymentStatus: 1 });
-orderSchema.index({ 'books.bookId': 1, buyer: 1 });
-orderSchema.index({ 'paymentDetails.transactionId': 1 }, { unique: true, sparse: true });
+purchaseSchema.index({ buyer: 1, createdAt: -1 });
+purchaseSchema.index({ buyerEmail: 1, createdAt: -1 });
+purchaseSchema.index({ status: 1 });
+purchaseSchema.index({ paymentStatus: 1 });
+purchaseSchema.index({ 'books.bookId': 1, buyer: 1 });
+purchaseSchema.index({ 'paymentDetails.transactionId': 1 }, { unique: true, sparse: true });
 
-export default mongoose.model('Order', orderSchema);
+export default mongoose.model('Purchase', purchaseSchema, 'purches');

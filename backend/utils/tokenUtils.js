@@ -25,3 +25,28 @@ export const verifyToken = (token) => {
     return null;
   }
 };
+
+export const generateAccountSetupToken = ({ readerId, email }) => {
+  const secret = process.env.JWT_SECRET;
+  const expiresIn = process.env.ACCOUNT_SETUP_TOKEN_EXPIRE || '24h';
+
+  return jwt.sign(
+    {
+      id: readerId,
+      email,
+      purpose: 'auto-account-password-setup',
+    },
+    secret,
+    { expiresIn }
+  );
+};
+
+export const verifyAccountSetupToken = (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded?.purpose !== 'auto-account-password-setup') return null;
+    return decoded;
+  } catch (error) {
+    return null;
+  }
+};

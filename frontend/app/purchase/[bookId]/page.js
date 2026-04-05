@@ -27,6 +27,7 @@ export default function PurchasePage() {
   const [isLoadingBook, setIsLoadingBook] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedOrder, setSubmittedOrder] = useState(null);
+  const [hasActiveOrderForBook, setHasActiveOrderForBook] = useState(false);
 
   const [form, setForm] = useState({
     email: '',
@@ -62,6 +63,30 @@ export default function PurchasePage() {
       setForm((prev) => ({ ...prev, email: user.email }));
     }
   }, [isReaderOrPublisherLoggedIn, user?.email]);
+
+  useEffect(() => {
+    const checkExistingOrder = async () => {
+      if (!bookId || !isReaderLoggedIn) {
+        setHasActiveOrderForBook(false);
+        return;
+      }
+
+      try {
+        const response = await purchaseService.getMyPurchasedBooks();
+        const books = response.data?.data?.books || [];
+        const existing = books.find((item) => String(item._id) === String(bookId) && Boolean(item.isUnlocked));
+        setHasActiveOrderForBook(Boolean(existing));
+
+        if (existing) {
+          toast.error('আপনি এই বইটি ইতোমধ্যে কিনেছেন, তাই আবার কিনতে পারবেন না।');
+        }
+      } catch (error) {
+        setHasActiveOrderForBook(false);
+      }
+    };
+
+    checkExistingOrder();
+  }, [bookId, isReaderLoggedIn]);
 
   const handleLoginClick = () => {
     setAuthUserType('reader');
@@ -103,6 +128,12 @@ export default function PurchasePage() {
       return;
     }
 
+    if (isReaderLoggedIn && hasActiveOrderForBook) {
+      toast.error('আপনি এই বইটি ইতোমধ্যে কিনেছেন, তাই আবার কিনতে পারবেন না।');
+      router.push('/active-book');
+      return;
+    }
+
     if (!form.transactionId.trim()) {
       toast.error('ট্রানজেকশন আইডি দিতে হবে');
       return;
@@ -133,21 +164,26 @@ export default function PurchasePage() {
       setSubmittedOrder(orderData);
 
       toast.success(response.data?.message || 'ক্রয়ের তথ্য সফলভাবে জমা হয়েছে');
-
-      if (isReaderLoggedIn) {
-        toast.success('আপনার বই তালিকায় নিয়ে যাওয়া হচ্ছে...');
-        setTimeout(() => {
-          router.push('/active-book');
-        }, 700);
-        return;
-      }
-
-      toast.success('দয়া করে ইমেইল চেক করুন। প্রয়োজনীয় তথ্য সেখানে পাঠানো হয়েছে।');
-
       if (orderData?.accountCreated) {
         toast.success('নতুন রিডার অ্যাকাউন্ট তৈরি করা হয়েছে এবং লগইন তথ্য ইমেইলে পাঠানো হয়েছে');
       }
+
+      if (!isReaderLoggedIn) {
+        toast.success('দয়া করে ইমেইল চেক করুন। প্রয়োজনীয় তথ্য সেখানে পাঠানো হয়েছে।');
+      }
+
+      const params = new URLSearchParams();
+      if (orderData?.orderNumber) params.set('orderNumber', orderData.orderNumber);
+      if (orderData?.accountCreated) params.set('accountCreated', '1');
+
+      const query = params.toString();
+      router.push(query ? `/purchase/success?${query}` : '/purchase/success');
+      return;
     } catch (error) {
+      if (error.response?.status === 409) {
+        toast.error('আপনি এই বইটি ইতোমধ্যে কিনেছেন, তাই আবার কিনতে পারবেন না।');
+        return;
+      }
       toast.error(error.response?.data?.message || 'ক্রয়ের তথ্য জমা দেওয়া যায়নি');
     } finally {
       setIsSubmitting(false);
@@ -311,9 +347,27 @@ export default function PurchasePage() {
                     />
                   </div>
 
-                  <Button type="submit" variant="primary" className="w-full py-3 text-base" isLoading={isSubmitting}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    className="w-full py-3 text-base"
+                    isLoading={isSubmitting}
+                    disabled={isReaderLoggedIn && hasActiveOrderForBook}
+                  >
                     জমা দিন
                   </Button>
+                  {isReaderLoggedIn && hasActiveOrderForBook && (
+                    <div className="rounded-2xl border border-amber-300/40 bg-amber-500/12 p-4 text-amber-100">
+                      <p className="text-sm font-medium">
+                        আপনি এই বইটি ইতোমধ্যে কিনেছেন, তাই আবার কিনতে পারবেন না।
+                      </p>
+                      <div className="mt-3">
+                        <Button variant="outline" onClick={() => router.push('/active-book')}>
+                          Active Book এ যান
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   {isNonReaderLoggedIn && (
                     <div className="rounded-2xl border border-blue-300/35 bg-blue-500/12 p-4 text-blue-100">
                       <p className="text-sm font-medium">

@@ -10,6 +10,7 @@ export const readerAuthService = {
   forgotPassword: (data) => apiClient.post(AUTH_ENDPOINTS.READER_FORGOT_PASSWORD, data),
   verifyResetOTP: (data) => apiClient.post(AUTH_ENDPOINTS.READER_VERIFY_RESET_OTP, data),
   resetPassword: (data) => apiClient.post(AUTH_ENDPOINTS.READER_RESET_PASSWORD, data),
+  completeAccountSetup: (data) => apiClient.post(AUTH_ENDPOINTS.READER_COMPLETE_ACCOUNT_SETUP, data),
   updatePassword: (data) => apiClient.put(AUTH_ENDPOINTS.READER_UPDATE_PASSWORD, data),
   updateEmail: (data) => apiClient.post(AUTH_ENDPOINTS.READER_UPDATE_EMAIL, data),
   sendEmailChangeOTP: (data) => apiClient.post(AUTH_ENDPOINTS.READER_SEND_EMAIL_CHANGE_OTP, data),

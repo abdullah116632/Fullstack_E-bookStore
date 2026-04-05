@@ -160,18 +160,18 @@ export default function ActiveBooksPage() {
         onChangeEmail={handleChangeEmail}
       />
 
-      <main className="relative flex-1 overflow-hidden bg-transparent pt-8 pb-16">
+      <main className="relative flex-1 overflow-hidden bg-transparent pt-4 pb-16 sm:pt-6">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-90 bg-linear-to-b from-slate-900 via-slate-800 to-transparent" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
+          className="mb-7 sm:mb-9"
         >
           <button
             onClick={() => router.push('/')}
-            className="mb-6 flex items-center gap-2 text-sm font-medium text-cyan-100 transition-colors hover:text-white"
+            className="mb-4 flex items-center gap-2 text-sm font-medium text-cyan-100 transition-colors hover:text-white"
           >
             <IoArrowBack /> {t('myBooks.backToHome')}
           </button>

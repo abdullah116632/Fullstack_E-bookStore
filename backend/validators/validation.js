@@ -42,6 +42,12 @@ export const resetPasswordValidation = [
   body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
 ];
 
+export const completeAutoAccountSetupValidation = [
+  body('token').trim().notEmpty().withMessage('Setup token is required'),
+  body('temporaryPassword').trim().notEmpty().withMessage('Temporary password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+];
+
 export const updatePasswordValidation = [
   body('currentPassword').notEmpty().withMessage('Current password is required'),
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),

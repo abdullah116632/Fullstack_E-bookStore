@@ -1,5 +1,5 @@
 import Reader from '../models/Reader.js';
-import { generateToken } from '../utils/tokenUtils.js';
+import { generateToken, verifyAccountSetupToken } from '../utils/tokenUtils.js';
 import { sendOTPEmail, sendWelcomeEmail } from '../utils/emailService.js';
 import { generateOTP, getOTPExpiryTime, isOTPValid, isOTPAttemptsExceeded } from '../utils/helpers.js';
 import { HTTP_STATUS } from '../config/constants.js';
@@ -328,6 +328,61 @@ export const readerResetPassword = async (req, res, next) => {
     res.status(HTTP_STATUS.OK).json({
       success: true,
       message: 'Password reset successfully. Please login with your new password.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Complete auto-created account setup (via email link) and login
+export const readerCompleteAutoAccountSetup = async (req, res, next) => {
+  try {
+    const { token, temporaryPassword, newPassword } = req.body;
+
+    const decoded = verifyAccountSetupToken(token);
+    if (!decoded?.id) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Invalid or expired setup link. Please request a new one.',
+      });
+    }
+
+    const reader = await Reader.findById(decoded.id).select('+password');
+    if (!reader) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Reader not found.',
+      });
+    }
+
+    if (!reader.isActive) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        success: false,
+        message: 'Your account is deactivated.',
+      });
+    }
+
+    const isTempPasswordValid = await reader.matchPassword(String(temporaryPassword || ''));
+    if (!isTempPasswordValid) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Temporary password is incorrect.',
+      });
+    }
+
+    reader.password = newPassword;
+    reader.lastLogin = new Date();
+    await reader.save();
+
+    const tokenForLogin = generateToken(reader._id);
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Password updated successfully. You are now logged in.',
+      data: {
+        token: tokenForLogin,
+        user: reader.toJSON(),
+      },
     });
   } catch (error) {
     next(error);

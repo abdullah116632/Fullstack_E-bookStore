@@ -1,5 +1,5 @@
 import Book from '../models/Book.js';
-import Order from '../models/Order.js';
+import Purchase from '../models/Purchase.js';
 import { HTTP_STATUS, ORDER_STATUS, PAYMENT_STATUS } from '../config/constants.js';
 import { runAutoActivation } from '../utils/purchaseActivation.js';
 
@@ -32,7 +32,7 @@ export const getAllPurchasesForAdmin = async (req, res, next) => {
       filter['accessControl.isUnlocked'] = true;
     }
 
-    const purchases = await Order.find(filter)
+    const purchases = await Purchase.find(filter)
       .populate('buyer', 'fullName email')
       .populate('books.bookId', 'title author price')
       .populate('accessControl.approvedBy', 'fullName email')
@@ -56,7 +56,7 @@ export const approvePurchaseByAdmin = async (req, res, next) => {
 
     const { id } = req.params;
 
-    const purchase = await Order.findById(id);
+    const purchase = await Purchase.findById(id);
     if (!purchase) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
@@ -107,7 +107,7 @@ export const deactivatePurchaseByAdmin = async (req, res, next) => {
     const { id } = req.params;
     const reason = String(req.body?.reason || '').trim() || 'deactivated-by-admin';
 
-    const purchase = await Order.findById(id);
+    const purchase = await Purchase.findById(id);
     if (!purchase) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,

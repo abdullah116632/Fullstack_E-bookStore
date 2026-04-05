@@ -1,5 +1,5 @@
 import Book from '../models/Book.js';
-import Order from '../models/Order.js';
+import Purchase from '../models/Purchase.js';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../config/constants.js';
 
 const AUTO_ACTIVATION_MINUTES = Number(process.env.PURCHASE_AUTO_ACTIVATION_MINUTES || 60);
@@ -28,7 +28,7 @@ export const runAutoActivation = async () => {
   isRunningAutoActivation = true;
 
   try {
-    const eligibleOrders = await Order.find(getEligibleFilter()).select('_id books').lean();
+    const eligibleOrders = await Purchase.find(getEligibleFilter()).select('_id books').lean();
 
     if (!eligibleOrders.length) {
       return { activatedCount: 0, skipped: false };
@@ -37,7 +37,7 @@ export const runAutoActivation = async () => {
     const orderIds = eligibleOrders.map((order) => order._id);
     const now = new Date();
 
-    await Order.updateMany(
+    await Purchase.updateMany(
       { _id: { $in: orderIds } },
       {
         $set: {

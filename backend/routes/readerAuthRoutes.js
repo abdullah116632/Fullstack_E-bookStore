@@ -6,6 +6,7 @@ import {
   readerForgotPassword,
   verifyReaderResetOTP,
   readerResetPassword,
+  readerCompleteAutoAccountSetup,
   readerUpdatePassword,
   readerUpdateProfile,
   readerSendEmailChangeOTP,
@@ -21,6 +22,7 @@ import {
   forgotPasswordValidation,
   verifyResetOTPValidation,
   resetPasswordValidation,
+  completeAutoAccountSetupValidation,
   updatePasswordValidation,
   updateProfileValidation,
   requestEmailChangeOTPValidation,
@@ -48,6 +50,9 @@ router.post('/verify-reset-otp', verifyResetOTPValidation, handleValidationError
 
 // Reset Password
 router.post('/reset-password', resetPasswordValidation, handleValidationErrors, readerResetPassword);
+
+// Complete auto-created account setup and login
+router.post('/complete-account-setup', completeAutoAccountSetupValidation, handleValidationErrors, readerCompleteAutoAccountSetup);
 
 // Update Password (Protected)
 router.put('/update-password', protect, updatePasswordValidation, handleValidationErrors, readerUpdatePassword);

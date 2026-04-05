@@ -109,15 +109,28 @@ export const sendOrderConfirmationEmail = async (email, fullName, orderNumber, t
   }
 };
 
-export const sendGuestPurchaseAccountEmail = async (email, fullName, generatedPassword) => {
+export const sendGuestPurchaseAccountEmail = async (email, fullName, generatedPassword, setupPasswordLink) => {
   try {
+    const setupLinkSection = setupPasswordLink
+      ? `
+      <p style="margin-top: 20px;">
+        <a href="${setupPasswordLink}" style="display:inline-block;padding:10px 16px;background:#0ea5e9;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
+          Set Your Password
+        </a>
+      </p>
+      <p>You can also copy this link and open it in your browser:</p>
+      <p style="word-break:break-all;">${setupPasswordLink}</p>
+      `
+      : '';
+
     const htmlContent = `
       <h2>Reader Account Created for Your Purchase</h2>
       <p>Hello ${fullName},</p>
       <p>We created a reader account for your email so you can access books you purchase.</p>
       <p><strong>Login Email:</strong> ${email}</p>
       <p><strong>Temporary Password:</strong> ${generatedPassword}</p>
-      <p>Please login and change your password immediately to secure your account.</p>
+      <p>Please set a new password using the link below and keep your account secure.</p>
+      ${setupLinkSection}
     `;
 
     const result = await getResend().emails.send({

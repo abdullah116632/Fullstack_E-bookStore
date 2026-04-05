@@ -1,11 +1,12 @@
 import crypto from 'crypto';
 import Book from '../models/Book.js';
-import Order from '../models/Order.js';
+import Purchase from '../models/Purchase.js';
 import Reader from '../models/Reader.js';
 import { HTTP_STATUS, ORDER_STATUS, PAYMENT_STATUS } from '../config/constants.js';
 import { sendGuestPurchaseAccountEmail, sendManualPurchaseSubmittedEmail } from '../utils/emailService.js';
 import { runAutoActivation } from '../utils/purchaseActivation.js';
 import { getSignedRawFileUrl } from '../utils/cloudinaryUpload.js';
+import { generateAccountSetupToken } from '../utils/tokenUtils.js';
 
 const RECEIVER_MOBILE_NUMBER = '01768899941';
 
@@ -66,7 +67,7 @@ export const createManualPurchase = async (req, res, next) => {
     }
 
     const normalizedTransactionId = String(transactionId || '').trim();
-    const existingTransaction = await Order.findOne({
+    const existingTransaction = await Purchase.findOne({
       'paymentDetails.transactionId': normalizedTransactionId,
     }).lean();
 
@@ -104,8 +105,22 @@ export const createManualPurchase = async (req, res, next) => {
         isActive: true,
       });
 
+      const accountSetupToken = generateAccountSetupToken({
+        readerId: createdReader._id,
+        email: createdReader.email,
+      });
+      const frontendBaseUrl = String(process.env.FRONTEND_URL || 'http://localhost:3000')
+        .split(',')[0]
+        .trim();
+      const setupPasswordLink = `${frontendBaseUrl}/setup-password?token=${encodeURIComponent(accountSetupToken)}`;
+
       try {
-        await sendGuestPurchaseAccountEmail(createdReader.email, createdReader.fullName, generatedPassword);
+        await sendGuestPurchaseAccountEmail(
+          createdReader.email,
+          createdReader.fullName,
+          generatedPassword,
+          setupPasswordLink
+        );
       } catch (emailError) {
         console.error('Failed to send auto-created reader account email:', emailError);
       }
@@ -157,9 +172,31 @@ export const createManualPurchase = async (req, res, next) => {
       });
     }
 
+    const existingActiveOrder = await Purchase.findOne({
+      buyer: buyer._id,
+      'books.bookId': book._id,
+      'accessControl.isUnlocked': true,
+      status: ORDER_STATUS.COMPLETED,
+      paymentStatus: PAYMENT_STATUS.COMPLETED,
+    })
+      .select('orderNumber status accessControl.isUnlocked')
+      .lean();
+
+    if (existingActiveOrder) {
+      return res.status(HTTP_STATUS.CONFLICT).json({
+        success: false,
+        message: 'You already have an active order for this book. Please wait for activation or visit Active Book.',
+        data: {
+          orderNumber: existingActiveOrder.orderNumber,
+          status: existingActiveOrder.status,
+          isUnlocked: Boolean(existingActiveOrder.accessControl?.isUnlocked),
+        },
+      });
+    }
+
     const amount = Number(book.price || 0);
 
-    const order = await Order.create({
+    const order = await Purchase.create({
       buyer: buyer._id,
       buyerEmail,
       books: [
@@ -218,7 +255,7 @@ export const getMyUnlockedBooks = async (req, res, next) => {
 
     await runAutoActivation();
 
-    const orders = await Order.find({
+    const orders = await Purchase.find({
       buyer: req.user._id,
       status: ORDER_STATUS.COMPLETED,
       paymentStatus: PAYMENT_STATUS.COMPLETED,
@@ -267,7 +304,7 @@ export const getMyPurchasedBooks = async (req, res, next) => {
 
     await runAutoActivation();
 
-    const orders = await Order.find({
+    const orders = await Purchase.find({
       buyer: req.user._id,
       books: { $exists: true, $ne: [] },
     })
@@ -320,7 +357,7 @@ export const getUnlockedBookPdf = async (req, res, next) => {
 
     const { id } = req.params;
 
-    const unlockedOrder = await Order.findOne({
+    const unlockedOrder = await Purchase.findOne({
       buyer: req.user._id,
       'books.bookId': id,
       'accessControl.isUnlocked': true,

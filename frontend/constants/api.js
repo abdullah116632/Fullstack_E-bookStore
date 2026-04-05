@@ -14,6 +14,7 @@ export const AUTH_ENDPOINTS = {
   READER_FORGOT_PASSWORD: '/auth/reader/forgot-password',
   READER_VERIFY_RESET_OTP: '/auth/reader/verify-reset-otp',
   READER_RESET_PASSWORD: '/auth/reader/reset-password',
+  READER_COMPLETE_ACCOUNT_SETUP: '/auth/reader/complete-account-setup',
   READER_UPDATE_PASSWORD: '/auth/reader/update-password',
   READER_UPDATE_EMAIL: '/auth/reader/update-email',
   READER_SEND_EMAIL_CHANGE_OTP: '/auth/reader/update-email/send-otp',
