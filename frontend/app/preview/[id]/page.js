@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import Navbar from '@/components/common/Navbar';
@@ -11,7 +11,7 @@ import { API_BASE_URL } from '@/constants/api';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`;
 
-export default function BookPreviewPage() {
+function BookPreviewContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -213,5 +213,13 @@ export default function BookPreviewPage() {
         initialFormType={authFormType}
       />
     </div>
+  );
+}
+
+export default function BookPreviewPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-transparent" />}>
+      <BookPreviewContent />
+    </Suspense>
   );
 }

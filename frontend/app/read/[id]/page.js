@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import toast from 'react-hot-toast';
@@ -9,7 +9,7 @@ import { API_BASE_URL } from '@/constants/api';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`;
 
-export default function ReaderBookPage() {
+function ReaderBookContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -267,5 +267,13 @@ export default function ReaderBookPage() {
       </main>
 
     </div>
+  );
+}
+
+export default function ReaderBookPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+      <ReaderBookContent />
+    </Suspense>
   );
 }

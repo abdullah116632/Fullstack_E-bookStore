@@ -16,7 +16,7 @@ import { bookService } from '@/services/bookService';
 export default function BooksPage() {
   const router = useRouter();
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const { t } = useTranslation();
+  const { language } = useTranslation();
 
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authUserType, setAuthUserType] = useState('reader');
@@ -27,6 +27,57 @@ export default function BooksPage() {
   const featuredBooks = books.filter((book) => book.isFeatured);
   const otherBooks = books.filter((book) => !book.isFeatured);
 
+  const isBn = language === 'bn';
+  const text = isBn
+    ? {
+        readerCatalog: 'রিডার ক্যাটালগ',
+        discoverBooks: 'বই আবিষ্কার করুন',
+        booksSubtitle: 'ফিচার্ড ও নতুন বই দেখুন, দ্রুত প্রিভিউ ও ক্রয় করুন।',
+        totalBooks: 'মোট বই',
+        loadingBooks: 'বই লোড হচ্ছে...',
+        noBooks: 'এখনও কোনো বই পাওয়া যায়নি।',
+        featuredBooks: 'ফিচার্ড বই',
+        featuredBadge: 'ফিচার্ড',
+        preview: 'প্রিভিউ',
+        buy: 'কিনুন',
+        aboutThisBook: 'এই বই সম্পর্কে',
+        noDescription: 'এই ফিচার্ড বইটির জন্য এখনও কোনো বর্ণনা যোগ করা হয়নি।',
+        secureAccessTitle: 'নিরাপদ অ্যাক্সেস',
+        secureAccessDesc: 'আপনার কেনা বইগুলো Active Book-এ স্ট্যাটাসসহ দেখা যাবে।',
+        quickPreviewTitle: 'দ্রুত প্রিভিউ',
+        quickPreviewDesc: 'কিনার আগে কয়েক পৃষ্ঠা দেখে সঠিক বই বেছে নিন।',
+        curatedPicksTitle: 'বাছাইকৃত বই',
+        curatedPicksDesc: 'ফিচার্ড বইগুলো মান ও পাঠকের চাহিদার ভিত্তিতে বাছাই করা।',
+        otherBooks: 'অন্যান্য বই',
+        buyUnavailable: 'এই বইটি এখন কিনতে পাওয়া যাচ্ছে না',
+        previewUnavailable: 'এই বইটির প্রিভিউ এখন পাওয়া যাচ্ছে না',
+        loadFailed: 'বই লোড করা যায়নি',
+      }
+    : {
+        readerCatalog: 'Reader Catalog',
+        discoverBooks: 'Discover Books',
+        booksSubtitle: 'Explore featured and latest books with quick preview and purchase actions.',
+        totalBooks: 'Total Books',
+        loadingBooks: 'Loading books...',
+        noBooks: 'No books available yet.',
+        featuredBooks: 'Featured Books',
+        featuredBadge: 'Featured',
+        preview: 'Preview',
+        buy: 'Buy',
+        aboutThisBook: 'About This Book',
+        noDescription: 'No description available for this featured book yet.',
+        secureAccessTitle: 'Secure Access',
+        secureAccessDesc: 'Your purchased books remain available inside Active Book with status visibility.',
+        quickPreviewTitle: 'Quick Preview',
+        quickPreviewDesc: 'Check preview pages before buying to choose the right book confidently.',
+        curatedPicksTitle: 'Curated Picks',
+        curatedPicksDesc: 'Featured books are selected to highlight quality and reader demand.',
+        otherBooks: 'Other Books',
+        buyUnavailable: 'Book is not available for purchase right now',
+        previewUnavailable: 'Preview is not available for this book',
+        loadFailed: 'Failed to load books',
+      };
+
   useEffect(() => {
     const fetchPublicBooks = async () => {
       try {
@@ -34,7 +85,7 @@ export default function BooksPage() {
         const response = await bookService.getPublicBooks(200);
         setBooks(response.data?.data?.books || []);
       } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to load books');
+        toast.error(error.response?.data?.message || text.loadFailed);
       } finally {
         setIsLoadingBooks(false);
       }
@@ -72,7 +123,7 @@ export default function BooksPage() {
 
   const handleBuyNow = (book) => {
     if (!book?._id) {
-      toast.error('Book is not available for purchase right now');
+      toast.error(text.buyUnavailable);
       return;
     }
 
@@ -81,7 +132,7 @@ export default function BooksPage() {
 
   const handlePreview = (book) => {
     if (!book?._id) {
-      toast.error('Preview is not available for this book');
+      toast.error(text.previewUnavailable);
       return;
     }
 
@@ -106,13 +157,13 @@ export default function BooksPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/60 bg-cyan-50/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-900">
-                  <IoSparkles /> Reader Catalog
+                  <IoSparkles /> {text.readerCatalog}
                 </div>
-                <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">Discover Books</h1>
-                <p className="mt-1 text-sm text-slate-600 sm:text-base">Explore featured and latest books with quick preview and purchase actions.</p>
+                <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">{text.discoverBooks}</h1>
+                <p className="mt-1 text-sm text-slate-600 sm:text-base">{text.booksSubtitle}</p>
               </div>
               <div className="rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-medium text-slate-700">
-                Total Books: <span className="font-bold text-slate-900">{books.length}</span>
+                {text.totalBooks}: <span className="font-bold text-slate-900">{books.length}</span>
               </div>
             </div>
           </section>
@@ -124,14 +175,14 @@ export default function BooksPage() {
             className="mt-8 space-y-8"
           >
             {isLoadingBooks ? (
-              <div className="py-8 text-center text-slate-300">Loading books...</div>
+              <div className="py-8 text-center text-slate-300">{text.loadingBooks}</div>
             ) : books.length === 0 ? (
-              <div className="py-8 text-center text-slate-300">No books available yet.</div>
+              <div className="py-8 text-center text-slate-300">{text.noBooks}</div>
             ) : (
               <>
                 {featuredBooks.length > 0 && (
                   <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">Featured Books</h2>
+                    <h2 className="text-xl font-bold text-white">{text.featuredBooks}</h2>
                     <div className="grid grid-cols-1 gap-6">
                       {featuredBooks.map((book) => (
                         <div
@@ -148,7 +199,7 @@ export default function BooksPage() {
                                 />
                                 <div className="absolute inset-0 bg-black/15 transition-all duration-300 group-hover:bg-black/30" />
                                 <span className="absolute bottom-3 left-3 inline-block rounded-full border border-amber-300/50 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
-                                  Featured
+                                  {text.featuredBadge}
                                 </span>
                               </div>
 
@@ -170,20 +221,20 @@ export default function BooksPage() {
                                     onClick={() => handlePreview(book)}
                                   >
                                     <IoEye className="text-sm" />
-                                    Preview
+                                    {text.preview}
                                   </Button>
                                   <Button variant="primary" size="sm" className="flex-1 gap-1.5" onClick={() => handleBuyNow(book)}>
                                     <IoCart className="text-sm" />
-                                    Buy
+                                    {text.buy}
                                   </Button>
                                 </div>
                               </div>
                             </article>
 
                             <aside className="p-5 lg:p-6">
-                              <h3 className="text-lg font-bold text-white">About This Book</h3>
+                              <h3 className="text-lg font-bold text-white">{text.aboutThisBook}</h3>
                               <p className="mt-3 text-sm leading-relaxed text-slate-200/95 lg:text-base">
-                                {book.description || 'No description available for this featured book yet.'}
+                                {book.description || text.noDescription}
                               </p>
                             </aside>
                           </div>
@@ -199,25 +250,25 @@ export default function BooksPage() {
                       <div className="rounded-2xl border border-emerald-200/35 bg-emerald-500/8 p-4">
                         <div className="flex items-center gap-2 text-emerald-200">
                           <IoShieldCheckmark />
-                          <p className="text-sm font-semibold">Secure Access</p>
+                          <p className="text-sm font-semibold">{text.secureAccessTitle}</p>
                         </div>
-                        <p className="mt-2 text-xs leading-relaxed text-slate-300">Your purchased books remain available inside Active Book with status visibility.</p>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-300">{text.secureAccessDesc}</p>
                       </div>
 
                       <div className="rounded-2xl border border-cyan-200/35 bg-cyan-500/8 p-4">
                         <div className="flex items-center gap-2 text-cyan-200">
                           <IoFlash />
-                          <p className="text-sm font-semibold">Quick Preview</p>
+                          <p className="text-sm font-semibold">{text.quickPreviewTitle}</p>
                         </div>
-                        <p className="mt-2 text-xs leading-relaxed text-slate-300">Check preview pages before buying to choose the right book confidently.</p>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-300">{text.quickPreviewDesc}</p>
                       </div>
 
                       <div className="rounded-2xl border border-amber-200/35 bg-amber-500/8 p-4">
                         <div className="flex items-center gap-2 text-amber-200">
                           <IoSparkles />
-                          <p className="text-sm font-semibold">Curated Picks</p>
+                          <p className="text-sm font-semibold">{text.curatedPicksTitle}</p>
                         </div>
-                        <p className="mt-2 text-xs leading-relaxed text-slate-300">Featured books are selected to highlight quality and reader demand.</p>
+                        <p className="mt-2 text-xs leading-relaxed text-slate-300">{text.curatedPicksDesc}</p>
                       </div>
                     </div>
                   </section>
@@ -225,7 +276,7 @@ export default function BooksPage() {
 
                 {otherBooks.length > 0 && (
                   <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">Other Books</h2>
+                    <h2 className="text-xl font-bold text-white">{text.otherBooks}</h2>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {otherBooks.map((book) => (
                         <article
@@ -259,11 +310,11 @@ export default function BooksPage() {
                                 onClick={() => handlePreview(book)}
                               >
                                 <IoEye className="text-sm" />
-                                Preview
+                                {text.preview}
                               </Button>
                               <Button variant="primary" size="sm" className="flex-1 gap-1.5" onClick={() => handleBuyNow(book)}>
                                 <IoCart className="text-sm" />
-                                Buy
+                                {text.buy}
                               </Button>
                             </div>
                           </div>

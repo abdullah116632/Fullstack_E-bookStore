@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -11,7 +11,7 @@ import Button from '@/components/common/Button';
 import { readerAuthService } from '@/services/authService';
 import { restoreAuthFromStorage } from '@/store/slices/authSlice';
 
-export default function SetupPasswordPage() {
+function SetupPasswordContent() {
   const router = useRouter();
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
@@ -171,5 +171,13 @@ export default function SetupPasswordPage() {
         initialFormType={authFormType}
       />
     </div>
+  );
+}
+
+export default function SetupPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-transparent" />}>
+      <SetupPasswordContent />
+    </Suspense>
   );
 }

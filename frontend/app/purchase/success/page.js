@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IoCheckmarkCircle, IoTimeOutline } from 'react-icons/io5';
 import Navbar from '@/components/common/Navbar';
@@ -9,7 +9,7 @@ import Button from '@/components/common/Button';
 
 const REDIRECT_SECONDS = 5;
 
-export default function PurchaseSuccessPage() {
+function PurchaseSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
@@ -85,5 +85,13 @@ export default function PurchaseSuccessPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function PurchaseSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-transparent" />}>
+      <PurchaseSuccessContent />
+    </Suspense>
   );
 }
