@@ -161,8 +161,8 @@ function ReaderBookContent() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/90 px-3 py-2 backdrop-blur-md sm:px-5">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3">
-          <div>
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-end gap-3 sm:justify-between">
+          <div className="hidden sm:block">
             <h1 className="text-sm font-bold text-white sm:text-base">{pageTitle}</h1>
             <p className="text-[11px] text-slate-300 sm:text-xs">Scroll vertically to read continuously</p>
           </div>

@@ -99,6 +99,7 @@
     "publisher": "Publisher",
     "admin": "Admin",
     "otpDescription": "Enter the 6-digit OTP sent to your email",
+    "didntGetOtp": "Didn't get the OTP?",
     "resendOtp": "Resend OTP",
     "resendIn": "Resend in",
     "seconds": "s",

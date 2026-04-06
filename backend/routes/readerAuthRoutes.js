@@ -4,6 +4,7 @@ import {
   verifyReaderSignup,
   readerLogin,
   readerForgotPassword,
+  resendReaderResetOTP,
   verifyReaderResetOTP,
   readerResetPassword,
   readerCompleteAutoAccountSetup,
@@ -44,6 +45,9 @@ router.post('/login', loginValidation, handleValidationErrors, readerLogin);
 
 // Forgot Password - Send OTP
 router.post('/forgot-password', forgotPasswordValidation, handleValidationErrors, readerForgotPassword);
+
+// Forgot Password - Resend OTP
+router.post('/resend-reset-otp', forgotPasswordValidation, handleValidationErrors, resendReaderResetOTP);
 
 // Verify Reset OTP
 router.post('/verify-reset-otp', verifyResetOTPValidation, handleValidationErrors, verifyReaderResetOTP);

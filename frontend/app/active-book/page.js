@@ -322,12 +322,14 @@ export default function ActiveBooksPage() {
             <IoBook className="mx-auto mb-4 text-5xl text-slate-300" />
             <h2 className="mb-2 text-xl font-bold text-white">{text.emptyTitle}</h2>
             <p className="mb-6 text-slate-300">{text.emptyDesc}</p>
-            <Button
-              variant="primary"
-              onClick={() => router.push('/')}
-            >
-              {t('myBooks.browseBooks')}
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                variant="primary"
+                onClick={() => router.push('/')}
+              >
+                {t('myBooks.browseBooks')}
+              </Button>
+            </div>
           </motion.div>
         )}
         </div>

@@ -61,6 +61,18 @@ export const readerForgotPassword = createAsyncThunk(
   }
 );
 
+export const readerResendResetOTP = createAsyncThunk(
+  'auth/readerResendResetOTP',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await readerAuthService.resendResetOTP(data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Request failed' });
+    }
+  }
+);
+
 export const readerVerifyResetOTP = createAsyncThunk(
   'auth/readerVerifyResetOTP',
   async (data, { rejectWithValue }) => {
@@ -78,6 +90,11 @@ export const readerResetPassword = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const response = await readerAuthService.resetPassword(data);
+      if (response.data?.data?.token) {
+        localStorage.setItem('authToken', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        localStorage.setItem('userType', 'reader');
+      }
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Reset failed' });
@@ -141,6 +158,47 @@ export const publisherForgotPassword = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: 'Request failed' });
+    }
+  }
+);
+
+export const publisherResendResetOTP = createAsyncThunk(
+  'auth/publisherResendResetOTP',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await publisherAuthService.resendResetOTP(data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Request failed' });
+    }
+  }
+);
+
+export const publisherVerifyResetOTP = createAsyncThunk(
+  'auth/publisherVerifyResetOTP',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await publisherAuthService.verifyResetOTP(data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Verification failed' });
+    }
+  }
+);
+
+export const publisherResetPassword = createAsyncThunk(
+  'auth/publisherResetPassword',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await publisherAuthService.resetPassword(data);
+      if (response.data?.data?.token) {
+        localStorage.setItem('authToken', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        localStorage.setItem('userType', 'publisher');
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Reset failed' });
     }
   }
 );
@@ -292,6 +350,57 @@ const authSlice = createSlice({
         state.error = action.payload?.message || 'Request failed';
       });
 
+    // Reader Resend Reset OTP
+    builder
+      .addCase(readerResendResetOTP.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(readerResendResetOTP.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(readerResendResetOTP.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Request failed';
+      });
+
+    // Reader Verify Reset OTP
+    builder
+      .addCase(readerVerifyResetOTP.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(readerVerifyResetOTP.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(readerVerifyResetOTP.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Verification failed';
+      });
+
+    // Reader Reset Password
+    builder
+      .addCase(readerResetPassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(readerResetPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (action.payload?.data?.token) {
+          state.isAuthenticated = true;
+          state.user = action.payload.data.user;
+          state.userType = 'reader';
+          state.authToken = action.payload.data.token;
+        }
+        state.message = action.payload.message;
+      })
+      .addCase(readerResetPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Reset failed';
+      });
+
     // Publisher Signup
     builder
       .addCase(publisherSignup.pending, (state) => {
@@ -366,6 +475,72 @@ const authSlice = createSlice({
       .addCase(adminLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload?.message || 'Login failed';
+      });
+
+    // Publisher Forgot Password
+    builder
+      .addCase(publisherForgotPassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(publisherForgotPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(publisherForgotPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Request failed';
+      });
+
+    // Publisher Resend Reset OTP
+    builder
+      .addCase(publisherResendResetOTP.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(publisherResendResetOTP.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(publisherResendResetOTP.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Request failed';
+      });
+
+    // Publisher Verify Reset OTP
+    builder
+      .addCase(publisherVerifyResetOTP.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(publisherVerifyResetOTP.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(publisherVerifyResetOTP.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Verification failed';
+      });
+
+    // Publisher Reset Password
+    builder
+      .addCase(publisherResetPassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(publisherResetPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (action.payload?.data?.token) {
+          state.isAuthenticated = true;
+          state.user = action.payload.data.user;
+          state.userType = 'publisher';
+          state.authToken = action.payload.data.token;
+        }
+        state.message = action.payload.message;
+      })
+      .addCase(publisherResetPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Reset failed';
       });
   },
 });

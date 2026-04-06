@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -9,8 +9,13 @@ import Button from '../common/Button';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   readerForgotPassword,
+  readerResendResetOTP,
   readerVerifyResetOTP,
   readerResetPassword,
+  publisherForgotPassword,
+  publisherResendResetOTP,
+  publisherVerifyResetOTP,
+  publisherResetPassword,
 } from '@/store/slices/authSlice';
 
 export default function ResetPasswordForm({
@@ -23,11 +28,25 @@ export default function ResetPasswordForm({
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
   const [errors, setErrors] = useState({});
 
   const dispatch = useDispatch();
   const { isLoading } = useSelector((state) => state.auth);
   const { t } = useTranslation();
+
+  const forgotPasswordAction = userType === 'publisher' ? publisherForgotPassword : readerForgotPassword;
+  const resendResetOTPAction = userType === 'publisher' ? publisherResendResetOTP : readerResendResetOTP;
+  const verifyResetOTPAction = userType === 'publisher' ? publisherVerifyResetOTP : readerVerifyResetOTP;
+  const resetPasswordAction = userType === 'publisher' ? publisherResetPassword : readerResetPassword;
+
+  useEffect(() => {
+    if (resendTimer <= 0) return undefined;
+    const interval = setInterval(() => {
+      setResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const validateEmail = () => {
     const newErrors = {};
@@ -63,7 +82,7 @@ export default function ResetPasswordForm({
 
     try {
       const response = await dispatch(
-        readerForgotPassword({ email })
+        forgotPasswordAction({ email })
       ).unwrap();
       toast.success(response.message || t('auth.otpSent'));
       setStep('otp');
@@ -79,10 +98,24 @@ export default function ResetPasswordForm({
 
     try {
       const response = await dispatch(
-        readerVerifyResetOTP({ email, otp })
+        verifyResetOTPAction({ email, otp })
       ).unwrap();
       toast.success(response.message || t('auth.success'));
       setStep('newPassword');
+      setErrors({});
+    } catch (err) {
+      toast.error(err?.message || t('auth.otpFailed'));
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      const response = await dispatch(
+        resendResetOTPAction({ email })
+      ).unwrap();
+      toast.success(response.message || t('auth.otpSent'));
+      setResendTimer(120);
+      setOtp('');
       setErrors({});
     } catch (err) {
       toast.error(err?.message || t('auth.otpFailed'));
@@ -95,7 +128,7 @@ export default function ResetPasswordForm({
 
     try {
       const response = await dispatch(
-        readerResetPassword({ email, newPassword })
+        resetPasswordAction({ email, newPassword })
       ).unwrap();
       toast.success(response.message || t('auth.success'));
       if (onSuccess) onSuccess();
@@ -165,6 +198,24 @@ export default function ResetPasswordForm({
               maxLength="6"
               required
             />
+
+            <div className="text-center">
+              <p className="mb-2 text-sm text-slate-600">{t('auth.didntGetOtp')}</p>
+              {resendTimer > 0 ? (
+                <p className="text-sm text-slate-600">
+                  {t('auth.resendIn')} <span className="font-semibold text-teal-700">{resendTimer}{t('auth.seconds')}</span>
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={isLoading}
+                  className="text-sm font-medium text-teal-700 transition-colors hover:text-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {t('auth.resendOtp')}
+                </button>
+              )}
+            </div>
           </>
         )}
 

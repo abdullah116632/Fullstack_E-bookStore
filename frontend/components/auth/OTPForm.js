@@ -123,6 +123,7 @@ export default function OTPForm({ userType = 'reader', email, onSuccess, onBackT
         </Button>
 
         <div className="text-center">
+          <p className="mb-2 text-sm text-slate-600">{t('auth.didntGetOtp')}</p>
           {resendTimer > 0 ? (
             <p className="text-sm text-slate-600">
               {t('auth.resendIn')} <span className="font-semibold text-teal-700">{resendTimer}{t('auth.seconds')}</span>

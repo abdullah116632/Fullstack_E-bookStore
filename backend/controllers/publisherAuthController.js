@@ -213,48 +213,71 @@ export const publisherLogin = async (req, res, next) => {
   }
 };
 
+const sendPublisherResetOTP = async (email) => {
+  const publisher = await Publisher.findOne({ email });
+  if (!publisher) {
+    return {
+      status: HTTP_STATUS.NOT_FOUND,
+      body: {
+        success: false,
+        message: 'Email does not exist for publisher account.',
+      },
+    };
+  }
+
+  const otp = generateOTP();
+  const otpExpiry = getOTPExpiryTime();
+
+  publisher.resetOTP = {
+    code: otp,
+    expiresAt: otpExpiry,
+    attempts: 0,
+  };
+  await publisher.save();
+
+  try {
+    await sendOTPEmail(email, otp, 'reset');
+  } catch (emailError) {
+    console.error('Failed to send OTP email:', emailError);
+    return {
+      status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      body: {
+        success: false,
+        message: 'Failed to send OTP email. Please try again.',
+      },
+    };
+  }
+
+  return {
+    status: HTTP_STATUS.OK,
+    body: {
+      success: true,
+      message: 'OTP sent to your email. Please check your inbox.',
+    },
+  };
+};
+
 // Forgot Password - Send OTP
 export const publisherForgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    // Find publisher
-    const publisher = await Publisher.findOne({ email });
-    if (!publisher) {
-      // For security, don't reveal if email exists
-      return res.status(HTTP_STATUS.OK).json({
-        success: true,
-        message: 'If email exists, OTP will be sent. Please check your inbox.',
-      });
+    const result = await sendPublisherResetOTP(email);
+    res.status(result.status).json(result.body);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Forgot Password - Resend OTP
+export const resendPublisherResetOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const result = await sendPublisherResetOTP(email);
+    if (result.body.success) {
+      result.body.message = 'OTP resent to your email. Please check your inbox.';
     }
-
-    // Generate OTP
-    const otp = generateOTP();
-    const otpExpiry = getOTPExpiryTime();
-
-    // Save reset OTP
-    publisher.resetOTP = {
-      code: otp,
-      expiresAt: otpExpiry,
-      attempts: 0,
-    };
-    await publisher.save();
-
-    // Send OTP email
-    try {
-      await sendOTPEmail(email, otp, 'reset');
-    } catch (emailError) {
-      console.error('Failed to send OTP email:', emailError);
-      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: 'Failed to send OTP email. Please try again.',
-      });
-    }
-
-    res.status(HTTP_STATUS.OK).json({
-      success: true,
-      message: 'OTP sent to your email. Please check your inbox.',
-    });
+    res.status(result.status).json(result.body);
   } catch (error) {
     next(error);
   }
@@ -339,9 +362,36 @@ export const publisherResetPassword = async (req, res, next) => {
     publisher.resetOTP = undefined;
     await publisher.save();
 
+    if (!publisher.isEmailVerified) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Please verify your email first. Check your inbox for the OTP.',
+      });
+    }
+
+    if (!publisher.isApproved) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Your publisher account is awaiting admin approval.',
+      });
+    }
+
+    if (!publisher.isActive) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        success: false,
+        message: 'Your account is deactivated.',
+      });
+    }
+
+    const token = generateToken(publisher._id);
+
     res.status(HTTP_STATUS.OK).json({
       success: true,
-      message: 'Password reset successfully. Please login with your new password.',
+      message: 'Password reset successfully. You are now logged in.',
+      data: {
+        token,
+        user: publisher.toJSON(),
+      },
     });
   } catch (error) {
     next(error);

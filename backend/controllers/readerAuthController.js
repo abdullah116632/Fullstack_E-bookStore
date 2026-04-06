@@ -199,48 +199,71 @@ export const readerLogin = async (req, res, next) => {
   }
 };
 
+const sendReaderResetOTP = async (email) => {
+  const reader = await Reader.findOne({ email });
+  if (!reader) {
+    return {
+      status: HTTP_STATUS.NOT_FOUND,
+      body: {
+        success: false,
+        message: 'Email does not exist for reader account.',
+      },
+    };
+  }
+
+  const otp = generateOTP();
+  const otpExpiry = getOTPExpiryTime();
+
+  reader.resetOTP = {
+    code: otp,
+    expiresAt: otpExpiry,
+    attempts: 0,
+  };
+  await reader.save();
+
+  try {
+    await sendOTPEmail(email, otp, 'reset');
+  } catch (emailError) {
+    console.error('Failed to send OTP email:', emailError);
+    return {
+      status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      body: {
+        success: false,
+        message: 'Failed to send OTP email. Please try again.',
+      },
+    };
+  }
+
+  return {
+    status: HTTP_STATUS.OK,
+    body: {
+      success: true,
+      message: 'OTP sent to your email. Please check your inbox.',
+    },
+  };
+};
+
 // Forgot Password - Send OTP
 export const readerForgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
-    // Find reader
-    const reader = await Reader.findOne({ email });
-    if (!reader) {
-      // For security, don't reveal if email exists
-      return res.status(HTTP_STATUS.OK).json({
-        success: true,
-        message: 'If email exists, OTP will be sent. Please check your inbox.',
-      });
+    const result = await sendReaderResetOTP(email);
+    res.status(result.status).json(result.body);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Forgot Password - Resend OTP
+export const resendReaderResetOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const result = await sendReaderResetOTP(email);
+    if (result.body.success) {
+      result.body.message = 'OTP resent to your email. Please check your inbox.';
     }
-
-    // Generate OTP
-    const otp = generateOTP();
-    const otpExpiry = getOTPExpiryTime();
-
-    // Save reset OTP
-    reader.resetOTP = {
-      code: otp,
-      expiresAt: otpExpiry,
-      attempts: 0,
-    };
-    await reader.save();
-
-    // Send OTP email
-    try {
-      await sendOTPEmail(email, otp, 'reset');
-    } catch (emailError) {
-      console.error('Failed to send OTP email:', emailError);
-      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: 'Failed to send OTP email. Please try again.',
-      });
-    }
-
-    res.status(HTTP_STATUS.OK).json({
-      success: true,
-      message: 'OTP sent to your email. Please check your inbox.',
-    });
+    res.status(result.status).json(result.body);
   } catch (error) {
     next(error);
   }
@@ -325,9 +348,29 @@ export const readerResetPassword = async (req, res, next) => {
     reader.resetOTP = undefined;
     await reader.save();
 
+    if (!reader.isEmailVerified) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Please verify your email first. Check your inbox for the OTP.',
+      });
+    }
+
+    if (!reader.isActive) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+        success: false,
+        message: 'Your account is deactivated.',
+      });
+    }
+
+    const token = generateToken(reader._id);
+
     res.status(HTTP_STATUS.OK).json({
       success: true,
-      message: 'Password reset successfully. Please login with your new password.',
+      message: 'Password reset successfully. You are now logged in.',
+      data: {
+        token,
+        user: reader.toJSON(),
+      },
     });
   } catch (error) {
     next(error);

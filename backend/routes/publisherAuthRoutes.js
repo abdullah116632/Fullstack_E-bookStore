@@ -4,6 +4,7 @@ import {
   verifyPublisherSignup,
   publisherLogin,
   publisherForgotPassword,
+  resendPublisherResetOTP,
   verifyPublisherResetOTP,
   publisherResetPassword,
   publisherUpdatePassword,
@@ -38,6 +39,9 @@ router.post('/login', loginValidation, handleValidationErrors, publisherLogin);
 
 // Forgot Password - Send OTP
 router.post('/forgot-password', forgotPasswordValidation, handleValidationErrors, publisherForgotPassword);
+
+// Forgot Password - Resend OTP
+router.post('/resend-reset-otp', forgotPasswordValidation, handleValidationErrors, resendPublisherResetOTP);
 
 // Verify Reset OTP
 router.post('/verify-reset-otp', verifyResetOTPValidation, handleValidationErrors, verifyPublisherResetOTP);
