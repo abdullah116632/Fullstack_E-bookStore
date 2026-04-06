@@ -222,6 +222,59 @@ export const adminLogin = createAsyncThunk(
   }
 );
 
+export const adminForgotPassword = createAsyncThunk(
+  'auth/adminForgotPassword',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await adminAuthService.forgotPassword(data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Request failed' });
+    }
+  }
+);
+
+export const adminResendResetOTP = createAsyncThunk(
+  'auth/adminResendResetOTP',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await adminAuthService.resendResetOTP(data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Request failed' });
+    }
+  }
+);
+
+export const adminVerifyResetOTP = createAsyncThunk(
+  'auth/adminVerifyResetOTP',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await adminAuthService.verifyResetOTP(data);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Verification failed' });
+    }
+  }
+);
+
+export const adminResetPassword = createAsyncThunk(
+  'auth/adminResetPassword',
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await adminAuthService.resetPassword(data);
+      if (response.data?.data?.token) {
+        localStorage.setItem('authToken', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        localStorage.setItem('userType', 'admin');
+      }
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Reset failed' });
+    }
+  }
+);
+
 // ==================== INITIAL STATE ====================
 
 const initialState = {
@@ -475,6 +528,72 @@ const authSlice = createSlice({
       .addCase(adminLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload?.message || 'Login failed';
+      });
+
+    // Admin Forgot Password
+    builder
+      .addCase(adminForgotPassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(adminForgotPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(adminForgotPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Request failed';
+      });
+
+    // Admin Resend Reset OTP
+    builder
+      .addCase(adminResendResetOTP.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(adminResendResetOTP.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(adminResendResetOTP.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Request failed';
+      });
+
+    // Admin Verify Reset OTP
+    builder
+      .addCase(adminVerifyResetOTP.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(adminVerifyResetOTP.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload.message;
+      })
+      .addCase(adminVerifyResetOTP.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Verification failed';
+      });
+
+    // Admin Reset Password
+    builder
+      .addCase(adminResetPassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(adminResetPassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (action.payload?.data?.token) {
+          state.isAuthenticated = true;
+          state.user = action.payload.data.user;
+          state.userType = 'admin';
+          state.authToken = action.payload.data.token;
+        }
+        state.message = action.payload.message;
+      })
+      .addCase(adminResetPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message || 'Reset failed';
       });
 
     // Publisher Forgot Password

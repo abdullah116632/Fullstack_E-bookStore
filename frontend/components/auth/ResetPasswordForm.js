@@ -16,6 +16,10 @@ import {
   publisherResendResetOTP,
   publisherVerifyResetOTP,
   publisherResetPassword,
+  adminForgotPassword,
+  adminResendResetOTP,
+  adminVerifyResetOTP,
+  adminResetPassword,
 } from '@/store/slices/authSlice';
 
 export default function ResetPasswordForm({
@@ -23,6 +27,7 @@ export default function ResetPasswordForm({
   onSuccess,
   onBackToLogin,
 }) {
+  const ADMIN_OTP_EMAIL = 'abdullah116632@gmail.com';
   const [step, setStep] = useState('email'); // email, otp, newPassword
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -35,10 +40,26 @@ export default function ResetPasswordForm({
   const { isLoading } = useSelector((state) => state.auth);
   const { t } = useTranslation();
 
-  const forgotPasswordAction = userType === 'publisher' ? publisherForgotPassword : readerForgotPassword;
-  const resendResetOTPAction = userType === 'publisher' ? publisherResendResetOTP : readerResendResetOTP;
-  const verifyResetOTPAction = userType === 'publisher' ? publisherVerifyResetOTP : readerVerifyResetOTP;
-  const resetPasswordAction = userType === 'publisher' ? publisherResetPassword : readerResetPassword;
+  const forgotPasswordAction = userType === 'publisher'
+    ? publisherForgotPassword
+    : userType === 'admin'
+    ? adminForgotPassword
+    : readerForgotPassword;
+  const resendResetOTPAction = userType === 'publisher'
+    ? publisherResendResetOTP
+    : userType === 'admin'
+    ? adminResendResetOTP
+    : readerResendResetOTP;
+  const verifyResetOTPAction = userType === 'publisher'
+    ? publisherVerifyResetOTP
+    : userType === 'admin'
+    ? adminVerifyResetOTP
+    : readerVerifyResetOTP;
+  const resetPasswordAction = userType === 'publisher'
+    ? publisherResetPassword
+    : userType === 'admin'
+    ? adminResetPassword
+    : readerResetPassword;
 
   useEffect(() => {
     if (resendTimer <= 0) return undefined;
@@ -181,7 +202,7 @@ export default function ResetPasswordForm({
           <>
             <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
               <p className="text-xs text-blue-700 font-medium">
-                {t('auth.otpSent')} <span className="font-bold">{email}</span>
+                {t('auth.otpSent')} <span className="font-bold">{userType === 'admin' ? ADMIN_OTP_EMAIL : email}</span>
               </p>
             </div>
             <Input

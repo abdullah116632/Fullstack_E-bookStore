@@ -24,8 +24,16 @@ export default function BooksPage() {
   const [books, setBooks] = useState([]);
   const [isLoadingBooks, setIsLoadingBooks] = useState(false);
 
-  const featuredBooks = books.filter((book) => Boolean(book.isFeatured));
-  const allBooks = books;
+  const isBookVisible = (book) => {
+    if (!book) return false;
+    if (book.visibility === 'private' || book.visibility === false) return false;
+    if (book.isVisible === false) return false;
+    return true;
+  };
+
+  const visibleBooks = books.filter(isBookVisible);
+  const featuredBooks = visibleBooks.filter((book) => Boolean(book.isFeatured));
+  const allBooks = visibleBooks;
 
   const isBn = language === 'bn';
   const text = isBn
@@ -81,7 +89,8 @@ export default function BooksPage() {
       try {
         setIsLoadingBooks(true);
         const response = await bookService.getAllBooks(500);
-        setBooks(response.data?.data?.books || []);
+        const fetchedBooks = response.data?.data?.books || [];
+        setBooks(fetchedBooks.filter(isBookVisible));
       } catch (error) {
         toast.error(error.response?.data?.message || text.loadFailed);
       } finally {

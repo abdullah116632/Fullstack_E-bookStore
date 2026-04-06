@@ -39,6 +39,7 @@ export const AUTH_ENDPOINTS = {
   ADMIN_REQUEST_SIGNUP_OTP: '/auth/admin/request-signup-otp',
   ADMIN_VERIFY_SIGNUP_OTP: '/auth/admin/verify-signup-otp',
   ADMIN_FORGOT_PASSWORD: '/auth/admin/forgot-password',
+  ADMIN_RESEND_RESET_OTP: '/auth/admin/resend-reset-otp',
   ADMIN_VERIFY_RESET_OTP: '/auth/admin/verify-reset-otp',
   ADMIN_RESET_PASSWORD: '/auth/admin/reset-password',
   ADMIN_UPDATE_PASSWORD: '/auth/admin/update-password',

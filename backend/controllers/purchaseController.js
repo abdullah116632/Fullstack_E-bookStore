@@ -309,7 +309,7 @@ export const getMyPurchasedBooks = async (req, res, next) => {
       buyer: req.user._id,
       books: { $exists: true, $ne: [] },
     })
-      .populate('books.bookId', 'title author coverImage fileUrl price')
+      .populate('books.bookId', 'title author coverImage fileUrl price visibility isVisible')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -318,6 +318,8 @@ export const getMyPurchasedBooks = async (req, res, next) => {
     orders.forEach((order) => {
       order.books.forEach((item) => {
         if (!item.bookId?._id) return;
+        if (item.bookId.visibility === 'private' || item.bookId.visibility === false) return;
+        if (item.bookId.isVisible === false) return;
 
         const key = String(item.bookId._id);
         if (uniqueBooks.has(key)) return;
@@ -331,6 +333,8 @@ export const getMyPurchasedBooks = async (req, res, next) => {
           coverImage: item.bookId.coverImage,
           price: item.price,
           fileUrl: item.bookId.fileUrl,
+          visibility: item.bookId.visibility,
+          isVisible: item.bookId.isVisible,
           purchasedOn: order.createdAt,
           orderNumber: order.orderNumber,
           isUnlocked,

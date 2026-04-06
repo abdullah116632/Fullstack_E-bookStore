@@ -27,6 +27,13 @@ export default function ActiveBooksPage() {
   const isBn = language === 'bn';
   const isReaderLoggedIn = isAuthenticated && userType === 'reader';
 
+  const isBookVisible = (book) => {
+    if (!book) return false;
+    if (book.visibility === 'private' || book.visibility === false) return false;
+    if (book.isVisible === false) return false;
+    return true;
+  };
+
   const text = isBn
     ? {
         loadFailed: 'কেনা বই লোড করা যায়নি',
@@ -65,7 +72,8 @@ export default function ActiveBooksPage() {
     try {
       setLoading(true);
       const response = await purchaseService.getMyPurchasedBooks();
-      setBooks(response.data?.data?.books || []);
+      const purchasedBooks = response.data?.data?.books || [];
+      setBooks(purchasedBooks.filter(isBookVisible));
     } catch (error) {
       toast.error(error.response?.data?.message || text.loadFailed);
     } finally {

@@ -31,6 +31,13 @@ export default function Home() {
   const [featuredBooks, setFeaturedBooks] = useState([]);
   const [isLoadingFeatured, setIsLoadingFeatured] = useState(false);
 
+  const isBookVisible = (book) => {
+    if (!book) return false;
+    if (book.visibility === 'private' || book.visibility === false) return false;
+    if (book.isVisible === false) return false;
+    return true;
+  };
+
   const isBn = language === 'bn';
   const text = isBn
     ? {
@@ -145,7 +152,8 @@ export default function Home() {
     try {
       setIsLoadingFeatured(true);
       const response = await bookService.getFeaturedBooks(6);
-      setFeaturedBooks(response.data?.data?.books || []);
+      const books = response.data?.data?.books || [];
+      setFeaturedBooks(books.filter(isBookVisible));
     } catch (error) {
       toast.error(error.response?.data?.message || text.errFeatured);
     } finally {

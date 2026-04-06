@@ -4,6 +4,7 @@ import {
   requestAdminSignupOTP,
   verifyAdminSignupOTP,
   adminForgotPassword,
+  resendAdminResetOTP,
   verifyAdminResetOTP,
   adminResetPassword,
   adminUpdatePassword,
@@ -37,6 +38,9 @@ router.post('/verify-signup-otp', adminSignupOTPVerifyValidation, handleValidati
 
 // Forgot Password - Send OTP
 router.post('/forgot-password', forgotPasswordValidation, handleValidationErrors, adminForgotPassword);
+
+// Forgot Password - Resend OTP
+router.post('/resend-reset-otp', forgotPasswordValidation, handleValidationErrors, resendAdminResetOTP);
 
 // Verify Reset OTP
 router.post('/verify-reset-otp', verifyResetOTPValidation, handleValidationErrors, verifyAdminResetOTP);

@@ -369,13 +369,6 @@ export const publisherResetPassword = async (req, res, next) => {
       });
     }
 
-    if (!publisher.isApproved) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({
-        success: false,
-        message: 'Your publisher account is awaiting admin approval.',
-      });
-    }
-
     if (!publisher.isActive) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).json({
         success: false,

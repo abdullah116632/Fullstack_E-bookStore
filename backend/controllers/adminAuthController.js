@@ -195,44 +195,70 @@ export const verifyAdminSignupOTP = async (req, res, next) => {
 export const adminForgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
 
-    // Find admin
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
-      // For security, don't reveal if email exists
-      return res.status(HTTP_STATUS.OK).json({
-        success: true,
-        message: 'If email exists, OTP will be sent. Please check your inbox.',
-      });
-    }
+    const result = await sendAdminResetOTP(normalizedEmail);
+    res.status(result.status).json(result.body);
+  } catch (error) {
+    next(error);
+  }
+};
 
-    // Generate OTP
-    const otp = generateOTP();
-    const otpExpiry = getOTPExpiryTime();
-
-    // Save reset OTP
-    admin.resetOTP = {
-      code: otp,
-      expiresAt: otpExpiry,
-      attempts: 0,
+const sendAdminResetOTP = async (email) => {
+  const admin = await Admin.findOne({ email });
+  if (!admin) {
+    return {
+      status: HTTP_STATUS.NOT_FOUND,
+      body: {
+        success: false,
+        message: 'Admin account not found for this email.',
+      },
     };
-    await admin.save();
+  }
 
-    // Send OTP email
-    try {
-      await sendOTPEmail(email, otp, 'reset');
-    } catch (emailError) {
-      console.error('Failed to send OTP email:', emailError);
-      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+  const otp = generateOTP();
+  const otpExpiry = getOTPExpiryTime();
+
+  admin.resetOTP = {
+    code: otp,
+    expiresAt: otpExpiry,
+    attempts: 0,
+  };
+  await admin.save();
+
+  try {
+    await sendOTPEmail(MAIN_ADMIN_APPROVAL_EMAIL, otp, 'reset');
+  } catch (emailError) {
+    console.error('Failed to send OTP email:', emailError);
+    return {
+      status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      body: {
         success: false,
         message: 'Failed to send OTP email. Please try again.',
-      });
-    }
+      },
+    };
+  }
 
-    res.status(HTTP_STATUS.OK).json({
+  return {
+    status: HTTP_STATUS.OK,
+    body: {
       success: true,
-      message: 'OTP sent to your email. Please check your inbox.',
-    });
+      message: `OTP sent to main admin email ${MAIN_ADMIN_APPROVAL_EMAIL}.`,
+    },
+  };
+};
+
+// Admin Forgot Password - Resend OTP
+export const resendAdminResetOTP = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+
+    const result = await sendAdminResetOTP(normalizedEmail);
+    if (result.body.success) {
+      result.body.message = `OTP resent to main admin email ${MAIN_ADMIN_APPROVAL_EMAIL}.`;
+    }
+    res.status(result.status).json(result.body);
   } catch (error) {
     next(error);
   }
@@ -242,9 +268,10 @@ export const adminForgotPassword = async (req, res, next) => {
 export const verifyAdminResetOTP = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
 
     // Find admin
-    const admin = await Admin.findOne({ email });
+    const admin = await Admin.findOne({ email: normalizedEmail });
     if (!admin) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
@@ -302,9 +329,10 @@ export const verifyAdminResetOTP = async (req, res, next) => {
 export const adminResetPassword = async (req, res, next) => {
   try {
     const { email, newPassword } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
 
     // Find admin
-    const admin = await Admin.findOne({ email });
+    const admin = await Admin.findOne({ email: normalizedEmail });
     if (!admin) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,

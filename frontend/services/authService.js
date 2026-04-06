@@ -48,6 +48,7 @@ export const adminAuthService = {
   requestSignupOTP: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_REQUEST_SIGNUP_OTP, data),
   verifySignupOTP: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_VERIFY_SIGNUP_OTP, data),
   forgotPassword: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_FORGOT_PASSWORD, data),
+  resendResetOTP: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_RESEND_RESET_OTP, data),
   verifyResetOTP: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_VERIFY_RESET_OTP, data),
   resetPassword: (data) => apiClient.post(AUTH_ENDPOINTS.ADMIN_RESET_PASSWORD, data),
   updatePassword: (data) => apiClient.put(AUTH_ENDPOINTS.ADMIN_UPDATE_PASSWORD, data),
