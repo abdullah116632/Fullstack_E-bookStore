@@ -177,7 +177,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#edf6ff]">
+    <div className="flex min-h-screen flex-col bg-transparent">
       <Navbar
         onLoginClick={handleLoginClick}
         onSignupClick={handleSignupClick}
@@ -217,13 +217,12 @@ export default function Home() {
                   >
                     <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr]">
                       <div className="border-b border-white/10 p-5 lg:border-r lg:border-b-0">
-                        <div className="relative h-62 overflow-hidden rounded-xl bg-slate-950">
+                        <div className="relative h-62 overflow-hidden rounded-xl bg-slate-900/55">
                           <img
                             src={book.coverImage}
                             alt={book.title}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
                           />
-                          <div className="absolute inset-0 bg-linear-to-t from-slate-950/90 via-slate-900/35 to-transparent" />
                           <div className="absolute bottom-3 left-3 rounded-full border border-cyan-200/35 bg-cyan-400/15 px-3 py-1 text-xs font-semibold text-cyan-100">
                             {text.featuredBadge}
                           </div>

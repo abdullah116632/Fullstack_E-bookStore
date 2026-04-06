@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { IoArrowBack, IoCheckmarkCircle } from 'react-icons/io5';
+import { IoArrowBack, IoCheckmarkCircle, IoCopyOutline } from 'react-icons/io5';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import AuthDrawer from '@/components/auth/AuthDrawer';
@@ -120,6 +120,15 @@ export default function PurchasePage() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCopyMobileNumber = async () => {
+    try {
+      await navigator.clipboard.writeText(MOBILE_PAYMENT_NUMBER);
+      toast.success('মোবাইল নম্বর কপি হয়েছে');
+    } catch (error) {
+      toast.error('মোবাইল নম্বর কপি করা যায়নি');
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -201,14 +210,16 @@ export default function PurchasePage() {
       />
 
       <main className="relative flex-1 overflow-hidden bg-transparent pb-16">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-90 bg-linear-to-b from-slate-950 via-slate-900 to-transparent" />
 
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8">
           <button
             onClick={() => router.back()}
-            className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-cyan-100 transition-colors hover:text-white"
+            className="mb-5 inline-flex items-center gap-2 rounded-xl border border-cyan-200/40 bg-white px-4 py-2.5 text-sm font-semibold text-green-800 shadow-md shadow-slate-900/35 transition-all hover:-translate-y-0.5 hover:border-cyan-100/65 hover:bg-slate-800/85 hover:text-white"
           >
-            <IoArrowBack /> ফিরে যান
+            <span className="rounded-full border border-cyan-200/35 bg-cyan-400/15 p-1">
+              <IoArrowBack className="text-sm" />
+            </span>
+            ফিরে যান
           </button>
 
           {isLoadingBook ? (
@@ -269,7 +280,17 @@ export default function PurchasePage() {
                     <p className="text-xs font-semibold tracking-wider text-cyan-100">
                       আগে এই নম্বরে <span className="font-bold text-amber-300">সেন্ড মানি</span> করুন
                     </p>
-                    <p className="text-3xl font-extrabold tracking-wide text-white sm:text-4xl">{MOBILE_PAYMENT_NUMBER}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-3xl font-extrabold tracking-wide text-white sm:text-4xl">{MOBILE_PAYMENT_NUMBER}</p>
+                      <button
+                        type="button"
+                        onClick={handleCopyMobileNumber}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-200/45 bg-slate-900/60 px-3 py-2 text-xs font-semibold text-cyan-100 transition-all hover:border-cyan-100 hover:bg-slate-800/85 hover:text-white"
+                      >
+                        <IoCopyOutline className="text-sm" />
+                        কপি
+                      </button>
+                    </div>
                     <p className="text-sm font-medium text-cyan-100/95">
                       bKash, Nagad, Rocket অথবা Upay দিয়ে <span className="font-semibold text-amber-300">সেন্ড মানি</span> করে নিচের ফরম পূরণ করুন।
                     </p>
@@ -283,9 +304,11 @@ export default function PurchasePage() {
                         <span className="font-bold text-cyan-300">{MOBILE_PAYMENT_NUMBER}</span> নম্বরে{' '}
                         <span className="font-bold text-amber-300">সেন্ড মানি</span> করুন।
                       </li>
-                      <li><span className="font-semibold text-amber-200">২.</span> যে মোবাইল ব্যাংকিং দিয়ে টাকা পাঠিয়েছেন, ফরমে সেটিই নির্বাচন করুন।</li>
-                      <li><span className="font-semibold text-amber-200">৩.</span> প্রেরকের মোবাইল নম্বর ও ট্রানজেকশন আইডি ঠিকভাবে লিখুন।</li>
-                      <li><span className="font-semibold text-amber-200">৪.</span> সঠিক ইমেইল দিন। বই আনলক হতে কিছু সময় লাগতে পারে (সর্বোচ্চ ১ ঘণ্টা)।</li>
+                      <li><span className="font-semibold text-amber-200">২.</span> সঠিক মোবাইল ব্যাংকিং অ্যাকাউন্ট (bKash, Nagad, Rocket, Upay) নির্বাচন করুন।</li>
+                      <li><span className="font-semibold text-amber-200">৩.</span> যে মোবাইল নম্বর থেকে সেন্ড মানি করেছেন, ফরমে সেটিই লিখুন।</li>
+                      <li><span className="font-semibold text-amber-200">৪.</span>ট্রানজেকশন আইডি ঠিকভাবে লিখুন। (সেন্ড মানি করার পর ফিরতি SMS এ ট্রানজেকশন আইডি থাকে, অথবা অ্যাপ(App) থেকে চেক করুন)</li>
+                      <li><span className="font-semibold text-amber-200">৫.</span> সঠিক ইমেইল দিন। বই আনলক হতে কিছু সময় লাগতে পারে (সর্বোচ্চ ১ ঘণ্টা)।</li>
+                      
                     </ol>
                   </div>
 

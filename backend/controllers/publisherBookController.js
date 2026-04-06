@@ -1,6 +1,7 @@
 import Book from '../models/Book.js';
 import { HTTP_STATUS } from '../config/constants.js';
 import { uploadBufferToCloudinary } from '../utils/cloudinaryUpload.js';
+import { PDFDocument } from 'pdf-lib';
 
 const getWordCount = (text = '') => text.trim().split(/\s+/).filter(Boolean).length;
 
@@ -54,6 +55,17 @@ export const uploadPublisherBook = async (req, res, next) => {
       });
     }
 
+    let totalPages = 1;
+    try {
+      const pdfDoc = await PDFDocument.load(bookFile.buffer);
+      totalPages = Math.max(1, pdfDoc.getPageCount());
+    } catch (pdfError) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Unable to read PDF pages. Please upload a valid PDF file.',
+      });
+    }
+
     const [coverUpload, pdfUpload] = await Promise.all([
       uploadBufferToCloudinary({
         buffer: coverImage.buffer,
@@ -81,6 +93,7 @@ export const uploadPublisherBook = async (req, res, next) => {
       fileUrl: pdfUpload.url,
       filePublicId: pdfUpload.publicId,
       fileType: 'pdf',
+      pages: totalPages,
       visibility: 'draft',
     });
 

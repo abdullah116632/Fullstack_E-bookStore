@@ -36,8 +36,9 @@ const buildGuestNameFromEmail = (email) => {
 };
 
 const generateTemporaryPassword = () => {
-  const token = crypto.randomBytes(5).toString('hex');
-  return `Reader@${token}`;
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+  const randomBytes = crypto.randomBytes(10);
+  return Array.from(randomBytes, (byte) => chars[byte % chars.length]).join('');
 };
 
 const ensureReader = (req, res) => {

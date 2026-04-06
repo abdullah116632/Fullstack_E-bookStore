@@ -37,6 +37,8 @@
     "ctaSecondaryButton": "লাইব্রেরি দেখুন"
   },
   "footer": {
+    "brandName": "অক্ষরবাড়ি",
+    "brandSubtitle": "ই-বুক মার্কেটপ্লেস",
     "description": "বই আবিষ্কার, পড়া এবং প্রকাশের জন্য আপনার চূড়ান্ত গন্তব্য বিশ্বব্যাপী।",
     "forReaders": "পাঠকদের জন্য",
     "browseBooks": "বই ব্রাউজ করুন",
@@ -125,10 +127,10 @@
   },
   "myBooks": {
     "title": "আমার বই",
-    "subtitle": "আপনার কাছে",
+    "subtitle": "আপনার লাইব্রেরিতে",
     "singular": "বই",
     "plural": "বই",
-    "inYourLibrary": "আপনার লাইব্রেরিতে রয়েছে",
+    "inYourLibrary": "আপনার কাছে রয়েছে",
     "backToHome": "হোমে ফিরুন",
     "noBooks": "এখনও কোন বই নেই",
     "noBookDescription": "অন্বেষণ শুরু করুন এবং আপনার লাইব্রেরি তৈরি করতে বই ক্রয় করুন",

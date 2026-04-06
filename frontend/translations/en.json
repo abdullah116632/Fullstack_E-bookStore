@@ -37,6 +37,8 @@
     "ctaSecondaryButton": "View Library"
   },
   "footer": {
+    "brandName": "Okkhorbari",
+    "brandSubtitle": "E-Book Marketplace",
     "description": "Your ultimate destination for discovering, reading, and publishing amazing books worldwide.",
     "forReaders": "For Readers",
     "browseBooks": "Browse Books",

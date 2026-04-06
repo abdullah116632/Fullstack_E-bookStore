@@ -5,13 +5,14 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('bn');
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load language from localStorage on mount
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') || 'en';
-    setLanguage(savedLanguage);
+    const savedLanguage = localStorage.getItem('language');
+    const resolvedLanguage = savedLanguage === 'en' || savedLanguage === 'bn' ? savedLanguage : 'bn';
+    setLanguage(resolvedLanguage);
     setIsLoaded(true);
   }, []);
 

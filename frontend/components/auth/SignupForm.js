@@ -136,7 +136,7 @@ export default function SignupForm({ userType = 'reader', onSuccess, onSwitchToL
           value={formData.fullName}
           onChange={handleChange}
           error={errors.fullName}
-          placeholder="John Doe"
+          placeholder="your name"
           required
         />
 

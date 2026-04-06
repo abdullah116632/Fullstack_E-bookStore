@@ -17,6 +17,32 @@ const fetchPdfBuffer = async (url) => {
   return response.arrayBuffer();
 };
 
+const fetchBookPdfBuffer = async (book) => {
+  try {
+    return await fetchPdfBuffer(book.fileUrl);
+  } catch (primaryError) {
+    let signedCandidates = [];
+    if (book.filePublicId) {
+      try {
+        signedCandidates = getSignedRawFileUrl({ publicId: book.filePublicId });
+      } catch (signedUrlError) {
+        signedCandidates = [];
+      }
+    }
+
+    for (const signedUrl of signedCandidates) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        return await fetchPdfBuffer(signedUrl);
+      } catch (signedError) {
+        // Try next signed URL candidate.
+      }
+    }
+
+    throw primaryError;
+  }
+};
+
 export const getFeaturedBooks = async (req, res, next) => {
   try {
     const limit = Number(req.query.limit || 6);
@@ -64,13 +90,33 @@ export const getPublicBooks = async (req, res, next) => {
   }
 };
 
+export const getAllBooks = async (req, res, next) => {
+  try {
+    const limit = Number(req.query.limit || 200);
+
+    const books = await Book.find({})
+      .select('title author coverImage price fileUrl description isFeatured visibility createdAt')
+      .sort({ createdAt: -1 })
+      .limit(Number.isNaN(limit) ? 200 : Math.max(1, Math.min(limit, 1000)))
+      .lean();
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: {
+        books,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getPublicBookById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const book = await Book.findOne({ _id: id, visibility: 'public' })
-      .select('title author coverImage price description pages language isFeatured fileUrl createdAt')
-      .lean();
+      .select('title author coverImage price description pages language isFeatured fileUrl filePublicId fileType createdAt');
 
     if (!book) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({
@@ -79,10 +125,26 @@ export const getPublicBookById = async (req, res, next) => {
       });
     }
 
+    const storedPages = Number(book.pages || 0);
+    if (book.fileType === 'pdf' && book.fileUrl && storedPages <= 1) {
+      try {
+        const sourceBytes = await fetchBookPdfBuffer(book);
+        const sourcePdf = await PDFDocument.load(sourceBytes);
+        const computedPages = Math.max(1, sourcePdf.getPageCount());
+
+        if (computedPages !== storedPages) {
+          book.pages = computedPages;
+          await book.save();
+        }
+      } catch (error) {
+        // Keep stored pages value if PDF metadata cannot be read.
+      }
+    }
+
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       data: {
-        book,
+        book: book.toObject(),
       },
     });
   } catch (error) {
@@ -121,35 +183,12 @@ export const getBookPreviewPdf = async (req, res, next) => {
     let sourceBytes;
 
     try {
-      sourceBytes = await fetchPdfBuffer(book.fileUrl);
-    } catch (primaryError) {
-      let signedCandidates = [];
-      if (book.filePublicId) {
-        try {
-          signedCandidates = getSignedRawFileUrl({ publicId: book.filePublicId });
-        } catch (signedUrlError) {
-          signedCandidates = [];
-        }
-      }
-
-      let fetched = false;
-      for (const signedUrl of signedCandidates) {
-        try {
-          // eslint-disable-next-line no-await-in-loop
-          sourceBytes = await fetchPdfBuffer(signedUrl);
-          fetched = true;
-          break;
-        } catch (signedError) {
-          // Try next signed URL candidate.
-        }
-      }
-
-      if (!fetched) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({
-          success: false,
-          message: 'Unable to fetch source PDF for preview.',
-        });
-      }
+      sourceBytes = await fetchBookPdfBuffer(book);
+    } catch (error) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Unable to fetch source PDF for preview.',
+      });
     }
 
     const sourcePdf = await PDFDocument.load(sourceBytes);

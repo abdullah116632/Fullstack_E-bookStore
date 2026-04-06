@@ -24,8 +24,8 @@ export default function BooksPage() {
   const [books, setBooks] = useState([]);
   const [isLoadingBooks, setIsLoadingBooks] = useState(false);
 
-  const featuredBooks = books.filter((book) => book.isFeatured);
-  const otherBooks = books.filter((book) => !book.isFeatured);
+  const featuredBooks = books.filter((book) => Boolean(book.isFeatured));
+  const allBooks = books;
 
   const isBn = language === 'bn';
   const text = isBn
@@ -33,7 +33,6 @@ export default function BooksPage() {
         readerCatalog: 'রিডার ক্যাটালগ',
         discoverBooks: 'বই আবিষ্কার করুন',
         booksSubtitle: 'ফিচার্ড ও নতুন বই দেখুন, দ্রুত প্রিভিউ ও ক্রয় করুন।',
-        totalBooks: 'মোট বই',
         loadingBooks: 'বই লোড হচ্ছে...',
         noBooks: 'এখনও কোনো বই পাওয়া যায়নি।',
         featuredBooks: 'ফিচার্ড বই',
@@ -48,7 +47,7 @@ export default function BooksPage() {
         quickPreviewDesc: 'কিনার আগে কয়েক পৃষ্ঠা দেখে সঠিক বই বেছে নিন।',
         curatedPicksTitle: 'বাছাইকৃত বই',
         curatedPicksDesc: 'ফিচার্ড বইগুলো মান ও পাঠকের চাহিদার ভিত্তিতে বাছাই করা।',
-        otherBooks: 'অন্যান্য বই',
+        allBooks: 'সব বই',
         buyUnavailable: 'এই বইটি এখন কিনতে পাওয়া যাচ্ছে না',
         previewUnavailable: 'এই বইটির প্রিভিউ এখন পাওয়া যাচ্ছে না',
         loadFailed: 'বই লোড করা যায়নি',
@@ -57,7 +56,6 @@ export default function BooksPage() {
         readerCatalog: 'Reader Catalog',
         discoverBooks: 'Discover Books',
         booksSubtitle: 'Explore featured and latest books with quick preview and purchase actions.',
-        totalBooks: 'Total Books',
         loadingBooks: 'Loading books...',
         noBooks: 'No books available yet.',
         featuredBooks: 'Featured Books',
@@ -72,17 +70,17 @@ export default function BooksPage() {
         quickPreviewDesc: 'Check preview pages before buying to choose the right book confidently.',
         curatedPicksTitle: 'Curated Picks',
         curatedPicksDesc: 'Featured books are selected to highlight quality and reader demand.',
-        otherBooks: 'Other Books',
+        allBooks: 'All Books',
         buyUnavailable: 'Book is not available for purchase right now',
         previewUnavailable: 'Preview is not available for this book',
         loadFailed: 'Failed to load books',
       };
 
   useEffect(() => {
-    const fetchPublicBooks = async () => {
+    const fetchAllBooks = async () => {
       try {
         setIsLoadingBooks(true);
-        const response = await bookService.getPublicBooks(200);
+        const response = await bookService.getAllBooks(500);
         setBooks(response.data?.data?.books || []);
       } catch (error) {
         toast.error(error.response?.data?.message || text.loadFailed);
@@ -91,7 +89,7 @@ export default function BooksPage() {
       }
     };
 
-    fetchPublicBooks();
+    fetchAllBooks();
   }, []);
 
   const handleLoginClick = () => {
@@ -141,7 +139,7 @@ export default function BooksPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-transparent">
       <Navbar
         onLoginClick={handleLoginClick}
         onSignupClick={handleSignupClick}
@@ -150,20 +148,16 @@ export default function BooksPage() {
         onChangeEmail={handleChangeEmail}
       />
 
-      <main className="relative flex-1 overflow-hidden bg-transparent pb-16 pt-8">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-90 bg-linear-to-b from-slate-950 via-slate-900 to-transparent" />
+      <main className="flex-1 pb-16 pt-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <section className="rounded-3xl border border-white/55 bg-white/65 p-6 shadow-xl shadow-slate-300/25 backdrop-blur-xl sm:p-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <section className="rounded-3xl border border-white/55 bg-slate-900/78 p-6 shadow-xl shadow-slate-900/30 backdrop-blur-md sm:p-8">
+            <div className="flex flex-col gap-3">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/60 bg-cyan-50/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-900">
+                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/35 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cyan-200">
                   <IoSparkles /> {text.readerCatalog}
                 </div>
-                <h1 className="mt-3 text-3xl font-bold text-slate-900 sm:text-4xl">{text.discoverBooks}</h1>
-                <p className="mt-1 text-sm text-slate-600 sm:text-base">{text.booksSubtitle}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-medium text-slate-700">
-                {text.totalBooks}: <span className="font-bold text-slate-900">{books.length}</span>
+                <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">{text.discoverBooks}</h1>
+                <p className="mt-1 text-sm text-slate-300 sm:text-base">{text.booksSubtitle}</p>
               </div>
             </div>
           </section>
@@ -182,23 +176,23 @@ export default function BooksPage() {
               <>
                 {featuredBooks.length > 0 && (
                   <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">{text.featuredBooks}</h2>
+                    <h2 className="text-xl font-bold text-cyan-900">{text.featuredBooks}</h2>
                     <div className="grid grid-cols-1 gap-6">
                       {featuredBooks.map((book) => (
                         <div
                           key={book._id}
-                          className="overflow-hidden rounded-2xl border border-white/12 bg-slate-900/62 shadow-lg shadow-slate-900/35"
+                          className="overflow-hidden rounded-2xl border border-white/12 bg-slate-900/65 shadow-lg shadow-slate-900/35"
                         >
                           <div className="grid grid-cols-1 lg:grid-cols-[330px_1fr]">
                             <article className="group border-b border-white/10 p-5 lg:border-r lg:border-b-0">
-                              <div className="relative h-64 overflow-hidden rounded-xl bg-slate-950">
+                              <div className="relative h-64 overflow-hidden rounded-xl bg-slate-900/55">
                                 <img
                                   src={book.coverImage}
                                   alt={book.title}
-                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 bg-black/15 transition-all duration-300 group-hover:bg-black/30" />
-                                <span className="absolute bottom-3 left-3 inline-block rounded-full border border-amber-300/50 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+                                <span className="absolute bottom-3 left-3 inline-block rounded-full border border-cyan-200/35 bg-cyan-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-100">
                                   {text.featuredBadge}
                                 </span>
                               </div>
@@ -274,20 +268,20 @@ export default function BooksPage() {
                   </section>
                 )}
 
-                {otherBooks.length > 0 && (
+                {allBooks.length > 0 && (
                   <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white">{text.otherBooks}</h2>
+                    <h2 className="text-xl font-bold text-cyan-500">{text.allBooks}</h2>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {otherBooks.map((book) => (
+                      {allBooks.map((book) => (
                         <article
                           key={book._id}
                           className="group overflow-hidden rounded-2xl border border-white/10 bg-slate-900/58 shadow-lg shadow-slate-900/35 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-200/35 hover:bg-slate-900/70"
                         >
-                          <div className="relative h-64 overflow-hidden bg-slate-950">
+                          <div className="relative h-64 overflow-hidden bg-slate-900/55">
                             <img
                               src={book.coverImage}
                               alt={book.title}
-                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-black/15 transition-all duration-300 group-hover:bg-black/30" />
                           </div>

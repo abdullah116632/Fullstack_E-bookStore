@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { IoMenu, IoClose, IoLogOut } from 'react-icons/io5';
@@ -24,8 +24,31 @@ export default function Navbar({
   const { isAuthenticated, user, userType } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useTranslation();
   const { language, toggleLanguage } = useLanguage();
+
+  const isActivePath = (href) => pathname === href || pathname?.startsWith(`${href}/`);
+
+  const desktopLinkClass = (href) => {
+    const isActive = isActivePath(href);
+    return [
+      'rounded-xl border px-4 py-2 text-sm font-semibold transition-all duration-300',
+      isActive
+        ? 'border-amber-400 bg-linear-to-r from-amber-200 to-rose-200 text-rose-900 shadow-md shadow-amber-300/45'
+        : 'border-transparent bg-white/70 text-slate-700 hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-100/75 hover:text-rose-800',
+    ].join(' ');
+  };
+
+  const mobileLinkClass = (href) => {
+    const isActive = isActivePath(href);
+    return [
+      'mb-3 block rounded-lg px-4 py-3 text-sm font-semibold transition-colors duration-300',
+      isActive
+        ? 'bg-linear-to-r from-amber-200 to-rose-200 text-rose-900 ring-1 ring-amber-400'
+        : 'text-slate-700 hover:bg-amber-100 hover:text-rose-800',
+    ].join(' ');
+  };
 
   const handleLogout = () => {
     sessionStorage.setItem('intentionalLogout', '1');
@@ -36,16 +59,20 @@ export default function Navbar({
 
   return (
     <nav className="sticky top-0 z-40 px-3 pt-3 sm:px-6">
-      <div className="mx-auto max-w-7xl rounded-2xl border border-white/65 bg-white/72 px-4 shadow-lg shadow-slate-300/35 backdrop-blur-xl sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl rounded-2xl border border-emerald-200/70 bg-linear-to-r from-teal-50/90 via-emerald-50/90 to-lime-50/90 px-4 shadow-lg shadow-emerald-200/35 backdrop-blur-xl sm:px-6 lg:px-8">
         <div className="flex h-18 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="group flex items-center gap-3">
             <div className="rounded-xl bg-linear-to-br from-teal-600 to-cyan-600 p-2.5 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-teal-500/30">
               <FaBook className="text-white text-xl" />
             </div>
-            <div className="hidden sm:block">
-              <div className="bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text text-xl font-bold text-transparent">{t('nav.ebook')}</div>
-              <div className="text-xs font-medium text-slate-500">{t('nav.marketplace')}</div>
+            <div className="block">
+              <div className="bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text text-[11px] font-bold text-transparent sm:text-xl">
+                {language === 'bn' ? 'অক্ষরবাড়ি' : 'Okkhorbari'}
+              </div>
+              <div className="text-[9px] font-medium text-slate-500 sm:text-xs">
+                {language === 'bn' ? 'ডিজিটাল পাঠশালা' : 'Digital Book Hub'}
+              </div>
             </div>
           </Link>
 
@@ -53,14 +80,14 @@ export default function Navbar({
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/books"
-              className="rounded-xl border border-transparent bg-slate-100/80 px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-800"
+              className={desktopLinkClass('/books')}
             >
               {t('nav.allBooks')}
             </Link>
 
             <Link
               href="/active-book"
-              className="rounded-xl border border-transparent bg-slate-100/80 px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+              className={desktopLinkClass('/active-book')}
             >
               {t('nav.yourBooks')}
             </Link>
@@ -95,7 +122,7 @@ export default function Navbar({
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="rounded-xl border border-slate-300 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+              className="rounded-xl border border-emerald-300/80 bg-white/85 px-3 py-2 text-sm font-semibold text-emerald-900 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
             >
               {language === 'en' ? 'বাংলা' : 'English'}
             </button>
@@ -105,13 +132,20 @@ export default function Navbar({
           <div className="flex items-center gap-2 md:hidden">
             <button
               onClick={toggleLanguage}
-              className="rounded-xl border border-slate-300 bg-white/80 px-2 py-2 text-xs font-semibold text-slate-700 transition-all duration-300 hover:bg-white"
+              className="rounded-xl border border-emerald-300 bg-white/85 px-2 py-2 text-xs font-semibold text-emerald-900 transition-all duration-300 hover:bg-white"
             >
               {language === 'en' ? 'বাংলা' : 'ENG'}
             </button>
+            {isAuthenticated ? (
+              <ProfileDropdown
+                onEditProfile={onEditProfile}
+                onUpdatePassword={onUpdatePassword}
+                onChangeEmail={onChangeEmail}
+              />
+            ) : null}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-xl border border-transparent p-2.5 text-slate-700 transition-colors duration-300 hover:border-slate-200 hover:bg-slate-100"
+              className="rounded-xl border border-transparent p-2.5 text-emerald-900 transition-colors duration-300 hover:border-emerald-200 hover:bg-emerald-100/70"
             >
               {mobileMenuOpen ? <IoClose size={28} /> : <IoMenu size={28} />}
             </button>
@@ -125,7 +159,7 @@ export default function Navbar({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="border-t border-slate-200 py-4 md:hidden"
+            className="border-t border-emerald-200 py-4 md:hidden"
           >
             {isAuthenticated ? (
               <>
@@ -135,14 +169,14 @@ export default function Navbar({
                 </div>
                 <Link
                   href="/books"
-                  className="mb-3 block rounded-lg px-4 py-3 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:bg-cyan-50 hover:text-cyan-700"
+                  className={mobileLinkClass('/books')}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('nav.allBooks')}
                 </Link>
                 <Link
                   href="/active-book"
-                  className="block px-4 py-3 text-sm font-semibold text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-700 transition-colors duration-300 mb-3"
+                  className={mobileLinkClass('/active-book')}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('nav.yourBooks')}
@@ -161,14 +195,14 @@ export default function Navbar({
               <>
                 <Link
                   href="/books"
-                  className="mb-3 block rounded-lg px-4 py-3 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:bg-cyan-50 hover:text-cyan-700"
+                  className={mobileLinkClass('/books')}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('nav.allBooks')}
                 </Link>
                 <Link
                   href="/active-book"
-                  className="mb-3 block rounded-lg px-4 py-3 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:bg-teal-50 hover:text-teal-700"
+                  className={mobileLinkClass('/active-book')}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('nav.yourBooks')}

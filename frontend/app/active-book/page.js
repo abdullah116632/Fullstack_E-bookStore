@@ -23,8 +23,43 @@ export default function ActiveBooksPage() {
   const [authFormType, setAuthFormType] = useState('login');
   const [isChecking, setIsChecking] = useState(true);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const isBn = language === 'bn';
   const isReaderLoggedIn = isAuthenticated && userType === 'reader';
+
+  const text = isBn
+    ? {
+        loadFailed: 'কেনা বই লোড করা যায়নি',
+        fileUnavailable: 'এই মুহূর্তে বই ফাইল পাওয়া যাচ্ছে না',
+        readerFallbackTitle: 'বুক রিডার',
+        loginPromptTitle: 'বই দেখতে হলে আগে লগইন করুন',
+        loginPromptDesc: 'আপনার কেনা বই দেখতে রিডার অ্যাকাউন্ট দিয়ে লগইন করুন।',
+        loginCta: 'লগইন',
+        loadingBooks: 'কেনা বইগুলো লোড হচ্ছে...',
+        unlocked: 'আনলকড',
+        underVerify: 'ভেরিফিকেশনে',
+        emptyTitle: 'এখনও কোনো বই কেনা হয়নি',
+        emptyDesc: 'স্টোর থেকে বই কিনুন, এখানে আপনার লাইব্রেরিতে দেখাবে।',
+        verifyTitle: 'পারচেজ ভেরিফিকেশন',
+        verifyMessage: 'এই বইয়ের জন্য আপনার পারচেজ ভেরিফিকেশনে আছে। সর্বোচ্চ ১ ঘণ্টার মধ্যে এটি আনলক হবে।',
+        ok: 'ঠিক আছে',
+      }
+    : {
+        loadFailed: 'Failed to load purchased books',
+        fileUnavailable: 'Book file is not available right now',
+        readerFallbackTitle: 'Book Reader',
+        loginPromptTitle: 'To see your book, first login',
+        loginPromptDesc: 'Please login with a reader account to access your purchased books.',
+        loginCta: 'Login',
+        loadingBooks: 'Loading purchased books...',
+        unlocked: 'Unlocked',
+        underVerify: 'Under Verify',
+        emptyTitle: 'You have not bought any book yet',
+        emptyDesc: 'Buy books from the store and they will appear here.',
+        verifyTitle: 'Purchase Verification',
+        verifyMessage: 'Your purchase for this book is under verification. It will be unlocked very soon (within 1 hour).',
+        ok: 'OK',
+      };
 
   const fetchPurchasedBooks = async () => {
     try {
@@ -32,7 +67,7 @@ export default function ActiveBooksPage() {
       const response = await purchaseService.getMyPurchasedBooks();
       setBooks(response.data?.data?.books || []);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load purchased books');
+      toast.error(error.response?.data?.message || text.loadFailed);
     } finally {
       setLoading(false);
     }
@@ -104,11 +139,11 @@ export default function ActiveBooksPage() {
     }
 
     if (!book?.fileUrl) {
-      toast.error('Book file is not available right now');
+      toast.error(text.fileUnavailable);
       return;
     }
 
-    const encodedTitle = encodeURIComponent(book.title || 'Book Reader');
+    const encodedTitle = encodeURIComponent(book.title || text.readerFallbackTitle);
     router.push(`/read/${book._id}?title=${encodedTitle}`);
   };
 
@@ -160,9 +195,8 @@ export default function ActiveBooksPage() {
         onChangeEmail={handleChangeEmail}
       />
 
-      <main className="relative flex-1 overflow-hidden bg-transparent pt-4 pb-16 sm:pt-6">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-90 bg-linear-to-b from-slate-900 via-slate-800 to-transparent" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="relative flex-1 overflow-hidden pt-4 pb-16 sm:pt-6">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl bg-linear-to-b from-emerald-900 via-teal-900 to-cyan-950 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -171,9 +205,10 @@ export default function ActiveBooksPage() {
         >
           <button
             onClick={() => router.push('/')}
-            className="mb-4 flex items-center gap-2 text-sm font-medium text-cyan-100 transition-colors hover:text-white"
+            className="group mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-50 shadow-md shadow-cyan-950/25 backdrop-blur-sm transition-all duration-300 hover:border-cyan-100/70 hover:bg-cyan-300/20 hover:text-white"
           >
-            <IoArrowBack /> {t('myBooks.backToHome')}
+            <IoArrowBack className="text-base transition-transform duration-300 group-hover:-translate-x-0.5" />
+            {t('myBooks.backToHome')}
           </button>
 
           <div className="space-y-2">
@@ -199,19 +234,21 @@ export default function ActiveBooksPage() {
             className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md"
           >
             <IoBook className="mx-auto mb-4 text-5xl text-slate-300" />
-            <h2 className="mb-2 text-xl font-bold text-white">To see your book, first login</h2>
-            <p className="mb-6 text-slate-300">Please login with a reader account to access your purchased books.</p>
-            <Button
-              variant="primary"
-              onClick={handleLoginClick}
-            >
-              Login
-            </Button>
+            <h2 className="mb-2 text-xl font-bold text-white">{text.loginPromptTitle}</h2>
+            <p className="mb-6 text-slate-300">{text.loginPromptDesc}</p>
+            <div className="flex justify-center">
+              <Button
+                variant="primary"
+                onClick={handleLoginClick}
+              >
+                {text.loginCta}
+              </Button>
+            </div>
           </motion.div>
         ) : loading ? (
           <div className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md">
             <div className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2 border-cyan-300" />
-            <p className="mt-4 text-slate-300">Loading purchased books...</p>
+            <p className="mt-4 text-slate-300">{text.loadingBooks}</p>
           </div>
         ) : books.length > 0 ? (
           <motion.div
@@ -227,11 +264,11 @@ export default function ActiveBooksPage() {
                 className="group overflow-hidden rounded-2xl border border-white/12 bg-slate-900/62 shadow-lg shadow-slate-900/35 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-200/35 hover:bg-slate-900/72 hover:shadow-2xl"
               >
                 {/* Book Cover */}
-                <div className="relative h-64 overflow-hidden bg-slate-950">
+                <div className="relative h-64 overflow-hidden bg-slate-900/55">
                   <img
                     src={book.coverImage}
                     alt={book.title}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/10 transition-all duration-300 group-hover:bg-black/35" />
                 </div>
@@ -244,7 +281,7 @@ export default function ActiveBooksPage() {
                     </h3>
                     <p className="mt-1 text-xs text-slate-300/95">{book.author}</p>
                     <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${book.isUnlocked ? 'bg-emerald-300/15 text-emerald-200 border border-emerald-300/40' : 'bg-amber-300/15 text-amber-200 border border-amber-300/40'}`}>
-                      {book.isUnlocked ? 'Unlocked' : 'Under Verify'}
+                      {book.isUnlocked ? text.unlocked : text.underVerify}
                     </span>
                   </div>
 
@@ -252,7 +289,7 @@ export default function ActiveBooksPage() {
                   <div className="flex items-center justify-between text-xs text-slate-300/95">
                     <span>৳{Number(book.price || 0).toFixed(2)}</span>
                     <span>
-                      {new Date(book.purchasedOn).toLocaleDateString('en-US', {
+                      {new Date(book.purchasedOn).toLocaleDateString(isBn ? 'bn-BD' : 'en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: '2-digit',
@@ -269,7 +306,7 @@ export default function ActiveBooksPage() {
                       onClick={() => handleReadBook(book)}
                     >
                       <IoEye className="text-sm" />
-                      <span className="hidden sm:inline">{t('myBooks.read')}</span>
+                      <span>{t('myBooks.read')}</span>
                     </Button>
                   </div>
                 </div>
@@ -283,8 +320,8 @@ export default function ActiveBooksPage() {
             className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md"
           >
             <IoBook className="mx-auto mb-4 text-5xl text-slate-300" />
-            <h2 className="mb-2 text-xl font-bold text-white">You dont buyed any book</h2>
-            <p className="mb-6 text-slate-300">Buy books from the store and they will appear here.</p>
+            <h2 className="mb-2 text-xl font-bold text-white">{text.emptyTitle}</h2>
+            <p className="mb-6 text-slate-300">{text.emptyDesc}</p>
             <Button
               variant="primary"
               onClick={() => router.push('/')}
@@ -308,13 +345,13 @@ export default function ActiveBooksPage() {
       {showVerifyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
           <div className="w-full max-w-md rounded-2xl border border-amber-300/45 bg-slate-900 p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-amber-200">Purchase Verification</h3>
+            <h3 className="text-lg font-bold text-amber-200">{text.verifyTitle}</h3>
             <p className="mt-3 text-sm text-slate-200">
-              your purches for this book is under verification it will unlock very soon after check within 1 hour
+              {text.verifyMessage}
             </p>
             <div className="mt-5 flex justify-end">
               <Button variant="primary" size="sm" onClick={() => setShowVerifyModal(false)}>
-                OK
+                {text.ok}
               </Button>
             </div>
           </div>

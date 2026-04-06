@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import Navbar from '@/components/common/Navbar';
@@ -21,6 +21,7 @@ function BookPreviewContent() {
   const [authFormType, setAuthFormType] = useState('login');
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewImages, setPreviewImages] = useState([]);
+  const [totalBookPages, setTotalBookPages] = useState(0);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState('');
 
@@ -62,6 +63,21 @@ function BookPreviewContent() {
       : API_BASE_URL;
 
     setPreviewUrl(`${workingApiBaseUrl}/books/${bookId}/preview?pages=7`);
+
+    const loadBookDetails = async () => {
+      try {
+        const response = await fetch(`${workingApiBaseUrl}/books/${bookId}`, { credentials: 'include' });
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        const pages = Number(payload?.data?.book?.pages || 0);
+        setTotalBookPages(Number.isNaN(pages) ? 0 : pages);
+      } catch (error) {
+        setTotalBookPages(0);
+      }
+    };
+
+    loadBookDetails();
   }, [bookId]);
 
   useEffect(() => {
@@ -124,11 +140,6 @@ function BookPreviewContent() {
     };
   }, [previewUrl]);
 
-  const pageTitle = useMemo(() => {
-    if (!bookTitle) return 'Read Few Pages';
-    return `Read Few Pages - ${bookTitle}`;
-  }, [bookTitle]);
-
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar
@@ -139,20 +150,11 @@ function BookPreviewContent() {
         onChangeEmail={handleChangeEmail}
       />
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/12 bg-slate-900/60 p-4 backdrop-blur-md">
-          <div>
-            <h1 className="text-xl font-bold text-white">{pageTitle}</h1>
-            <p className="text-sm text-slate-300">Preview is limited to first 7 pages.</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => router.push('/')}>
-            Back to Home
-          </Button>
-        </div>
-
-        <div className="overflow-hidden rounded-2xl border border-white/12 bg-white shadow-lg">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-0 pb-0 pt-2 sm:px-6 sm:pb-10 lg:px-8">
+        <div className="grid gap-4 sm:gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
+          <div className="order-2 overflow-hidden bg-white lg:order-2 lg:rounded-2xl lg:border lg:border-white/12 lg:shadow-lg">
           {isLoadingPreview && (
-            <div className="flex min-h-[60vh] items-center justify-center bg-linear-to-br from-slate-950 via-slate-900 to-cyan-950 px-6 py-12 text-center">
+            <div className="flex min-h-[calc(100vh-5.25rem)] items-center justify-center bg-linear-to-br from-slate-950 via-slate-900 to-cyan-950 px-6 py-12 text-center sm:min-h-[70vh]">
               <div className="w-full max-w-md rounded-3xl border border-cyan-200/25 bg-linear-to-b from-white/15 to-white/5 p-8 shadow-2xl shadow-slate-950/40 backdrop-blur-md">
                 <div className="relative mx-auto mb-6 h-20 w-20">
                   <div className="absolute inset-0 animate-spin rounded-full border-2 border-cyan-300/20 border-t-cyan-200" />
@@ -183,14 +185,14 @@ function BookPreviewContent() {
           )}
 
           {!isLoadingPreview && previewError && (
-            <div className="p-8 text-center text-rose-600">{previewError}</div>
+            <div className="flex min-h-[calc(100vh-5.25rem)] items-center justify-center p-8 text-center text-rose-600 sm:min-h-[70vh]">{previewError}</div>
           )}
 
           {!isLoadingPreview && !previewError && previewImages.length > 0 && (
-            <div className="max-h-[78vh] space-y-4 overflow-auto bg-slate-100 p-4">
+            <div className="h-[calc(100vh-5.25rem)] space-y-3 overflow-auto bg-slate-100 p-0 sm:h-[78vh] sm:space-y-4 sm:p-4">
               {previewImages.map((imageSrc, index) => (
-                <div key={`${index + 1}`} className="rounded-lg border border-slate-300 bg-white p-2 shadow-sm">
-                  <p className="mb-2 text-xs font-semibold text-slate-500">Page {index + 1}</p>
+                <div key={`${index + 1}`} className="bg-white p-0 sm:rounded-lg sm:border sm:border-slate-300 sm:p-2 sm:shadow-sm">
+                  <p className="mb-2 px-2 pt-2 text-xs font-semibold text-slate-500 sm:px-0 sm:pt-0">Page {index + 1}</p>
                   <img
                     src={imageSrc}
                     alt={`Preview page ${index + 1}`}
@@ -201,6 +203,19 @@ function BookPreviewContent() {
               ))}
             </div>
           )}
+          </div>
+
+          <aside className="order-1 mx-3 rounded-2xl border border-white/12 bg-slate-900/60 p-4 backdrop-blur-md sm:mx-0 lg:order-1 lg:sticky lg:top-24">
+            <div className="text-left">
+              <p className="text-sm font-semibold uppercase tracking-[0.08em] text-cyan-200">Read Few Pages</p>
+              <h1 className="mt-1 text-xl font-bold text-white wrap-break-word">{bookTitle || 'Book Preview'}</h1>
+              <p className="text-sm text-slate-300">Preview is limited to first 7 pages.</p>
+              <p className="mt-2 text-sm font-medium text-cyan-100">Total Pages: {totalBookPages || '-'}</p>
+            </div>
+            <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => router.push('/')}>
+              Back to Home
+            </Button>
+          </aside>
         </div>
       </main>
 

@@ -48,6 +48,7 @@ export const AUTH_ENDPOINTS = {
 
   // Public Books
   BOOKS_PUBLIC: '/books',
+  BOOKS_ALL: '/books/all',
   BOOKS_FEATURED: '/books/featured',
   BOOKS_BY_ID: '/books',
 

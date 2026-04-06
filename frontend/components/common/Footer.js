@@ -10,7 +10,7 @@ export default function Footer() {
   const { t } = useTranslation();
 
   return (
-    <footer className="mt-24 px-3 pb-3 sm:px-6">
+    <footer className="mt-14 px-3 pb-3 sm:px-6">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-white/60 bg-slate-900/90 text-slate-200 shadow-2xl shadow-slate-900/35 backdrop-blur-xl">
         <div className="relative px-5 py-12 sm:px-8 lg:px-10">
           <div className="pointer-events-none absolute inset-0 opacity-90">
@@ -26,8 +26,8 @@ export default function Footer() {
                   <FaBook className="text-lg text-white" />
                 </div>
                 <div>
-                  <span className="bg-linear-to-r from-white to-cyan-100 bg-clip-text text-xl font-bold text-transparent">{t('nav.ebook')}</span>
-                  <p className="text-xs text-slate-400">{t('nav.marketplace')}</p>
+                  <span className="bg-linear-to-r from-white to-cyan-100 bg-clip-text text-xl font-bold text-transparent">{t('footer.brandName')}</span>
+                  <p className="text-xs text-slate-400">{t('footer.brandSubtitle')}</p>
                 </div>
               </div>
 
@@ -113,22 +113,22 @@ export default function Footer() {
               <h3 className="text-base font-bold text-white">{t('footer.company')}</h3>
               <ul className="space-y-3 text-sm">
                 <li>
-                  <Link href="/" className="font-medium text-slate-300 transition-colors duration-300 hover:text-cyan-200">
+                  <Link href="/about-us" className="font-medium text-slate-300 transition-colors duration-300 hover:text-cyan-200">
                     {t('footer.aboutUs')}
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="font-medium text-slate-300 transition-colors duration-300 hover:text-cyan-200">
+                  <Link href="/contact" className="font-medium text-slate-300 transition-colors duration-300 hover:text-cyan-200">
                     {t('footer.contact')}
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="font-medium text-slate-300 transition-colors duration-300 hover:text-cyan-200">
+                  <Link href="/privacy-policy" className="font-medium text-slate-300 transition-colors duration-300 hover:text-cyan-200">
                     {t('footer.privacyPolicy')}
                   </Link>
                 </li>
                 <li>
-                  <Link href="/" className="font-medium text-slate-300 transition-colors duration-300 hover:text-cyan-200">
+                  <Link href="/terms-of-service" className="font-medium text-slate-300 transition-colors duration-300 hover:text-cyan-200">
                     {t('footer.termsOfService')}
                   </Link>
                 </li>
