@@ -33,8 +33,15 @@ export const forgotPasswordValidation = [
 ];
 
 export const verifyResetOTPValidation = [
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('otp').trim().notEmpty().withMessage('OTP is required').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 characters'),
+  body('email').trim().isEmail().withMessage('Please provide a valid email').normalizeEmail(),
+  body('otp')
+    .trim()
+    .notEmpty()
+    .withMessage('OTP is required')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 characters')
+    .matches(/^\d{6}$/)
+    .withMessage('OTP must be exactly 6 digits'),
 ];
 
 export const resetPasswordValidation = [

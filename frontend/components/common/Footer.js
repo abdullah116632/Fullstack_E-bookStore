@@ -42,7 +42,7 @@ export default function Footer() {
               </div>
 
               <div className="flex gap-3 pt-1">
-                <a href="#" className="rounded-lg border border-white/15 bg-white/8 p-2.5 text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300/40 hover:bg-blue-400/12 hover:text-blue-200">
+                <a href="https://www.facebook.com/profile.php?id=61577502346618" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/15 bg-white/8 p-2.5 text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300/40 hover:bg-blue-400/12 hover:text-blue-200">
                   <FaFacebook size={18} />
                 </a>
                 <a href="#" className="rounded-lg border border-white/15 bg-white/8 p-2.5 text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-300/40 hover:bg-sky-400/12 hover:text-sky-200">
@@ -51,7 +51,7 @@ export default function Footer() {
                 <a href="#" className="rounded-lg border border-white/15 bg-white/8 p-2.5 text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-pink-300/40 hover:bg-pink-400/12 hover:text-pink-200">
                   <FaInstagram size={18} />
                 </a>
-                <a href="#" className="rounded-lg border border-white/15 bg-white/8 p-2.5 text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-teal-300/40 hover:bg-teal-400/12 hover:text-teal-200">
+                <a href="https://www.linkedin.com/in/abdullah116632/" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/15 bg-white/8 p-2.5 text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:border-teal-300/40 hover:bg-teal-400/12 hover:text-teal-200">
                   <FaLinkedin size={18} />
                 </a>
               </div>

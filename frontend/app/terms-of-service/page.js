@@ -56,7 +56,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-lg font-semibold text-white">6. Disclaimer and Limitation</h2>
               <p className="mt-2">
-                Services are provided on an "as is" and "as available" basis. To the maximum extent permitted by law, we
+                Services are provided on an &quot;as is&quot; and &quot;as available&quot; basis. To the maximum extent permitted by law, we
                 disclaim warranties and limit liability for indirect or consequential damages.
               </p>
             </section>

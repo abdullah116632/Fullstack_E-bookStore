@@ -204,7 +204,7 @@ export default function ActiveBooksPage() {
       />
 
       <main className="relative flex-1 overflow-hidden pt-4 pb-16 sm:pt-6">
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl bg-linear-to-b from-emerald-900 via-teal-900 to-cyan-950 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mx-3 max-w-7xl overflow-hidden rounded-2xl bg-linear-to-b from-[#13110E] via-[#1F1A14] to-[#2B241B] px-4 py-6 shadow-2xl shadow-black/55 sm:mx-auto sm:px-6 sm:py-8 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -213,7 +213,7 @@ export default function ActiveBooksPage() {
         >
           <button
             onClick={() => router.push('/')}
-            className="group mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-50 shadow-md shadow-cyan-950/25 backdrop-blur-sm transition-all duration-300 hover:border-cyan-100/70 hover:bg-cyan-300/20 hover:text-white"
+            className="group mb-4 inline-flex items-center gap-2 rounded-full border border-amber-100/45 bg-amber-200/12 px-4 py-2 text-sm font-semibold text-amber-50 shadow-md shadow-black/35 backdrop-blur-sm transition-all duration-300 hover:border-amber-100/80 hover:bg-amber-200/22 hover:text-white"
           >
             <IoArrowBack className="text-base transition-transform duration-300 group-hover:-translate-x-0.5" />
             {t('myBooks.backToHome')}
@@ -221,7 +221,7 @@ export default function ActiveBooksPage() {
 
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-linear-to-br from-teal-600 to-cyan-600 p-3">
+              <div className="rounded-xl bg-linear-to-br from-[#B98B2E] to-[#7A5A1E] p-3 shadow-lg shadow-black/40">
                 <IoBook className="text-2xl text-white" />
               </div>
               <h1 className="text-4xl font-bold text-white">
@@ -239,7 +239,7 @@ export default function ActiveBooksPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md"
+            className="rounded-3xl border border-amber-100/20 bg-[#13110E]/68 px-8 py-16 text-center shadow-lg shadow-black/45 backdrop-blur-md"
           >
             <IoBook className="mx-auto mb-4 text-5xl text-slate-300" />
             <h2 className="mb-2 text-xl font-bold text-white">{text.loginPromptTitle}</h2>
@@ -254,8 +254,8 @@ export default function ActiveBooksPage() {
             </div>
           </motion.div>
         ) : loading ? (
-          <div className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2 border-cyan-300" />
+          <div className="rounded-3xl border border-amber-100/20 bg-[#13110E]/68 px-8 py-16 text-center shadow-lg shadow-black/45 backdrop-blur-md">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2 border-amber-300" />
             <p className="mt-4 text-slate-300">{text.loadingBooks}</p>
           </div>
         ) : books.length > 0 ? (
@@ -269,10 +269,10 @@ export default function ActiveBooksPage() {
               <motion.div
                 key={book._id}
                 variants={itemVariants}
-                className="group overflow-hidden rounded-2xl border border-white/12 bg-slate-900/62 shadow-lg shadow-slate-900/35 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-cyan-200/35 hover:bg-slate-900/72 hover:shadow-2xl"
+                className="group overflow-hidden rounded-2xl border border-amber-100/20 bg-[#13110E]/68 shadow-lg shadow-black/45 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-amber-200/45 hover:bg-[#241E16]/78 hover:shadow-2xl"
               >
                 {/* Book Cover */}
-                <div className="relative h-64 overflow-hidden bg-slate-900/55">
+                <div className="relative h-64 overflow-hidden bg-[#13110E]/60">
                   <img
                     src={book.coverImage}
                     alt={book.title}
@@ -325,7 +325,7 @@ export default function ActiveBooksPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-3xl border border-white/12 bg-slate-900/62 px-8 py-16 text-center shadow-lg shadow-slate-900/35 backdrop-blur-md"
+            className="rounded-3xl border border-amber-100/20 bg-[#13110E]/68 px-8 py-16 text-center shadow-lg shadow-black/45 backdrop-blur-md"
           >
             <IoBook className="mx-auto mb-4 text-5xl text-slate-300" />
             <h2 className="mb-2 text-xl font-bold text-white">{text.emptyTitle}</h2>
@@ -354,7 +354,7 @@ export default function ActiveBooksPage() {
 
       {showVerifyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
-          <div className="w-full max-w-md rounded-2xl border border-amber-300/45 bg-slate-900 p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-amber-300/45 bg-[#13110E] p-6 shadow-2xl shadow-black/65">
             <h3 className="text-lg font-bold text-amber-200">{text.verifyTitle}</h3>
             <p className="mt-3 text-sm text-slate-200">
               {text.verifyMessage}

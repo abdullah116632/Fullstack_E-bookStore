@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import Navbar from '@/components/common/Navbar';
@@ -8,6 +9,7 @@ import Footer from '@/components/common/Footer';
 import AuthDrawer from '@/components/auth/AuthDrawer';
 import Button from '@/components/common/Button';
 import { API_BASE_URL } from '@/constants/api';
+import { useTranslation } from '@/hooks/useTranslation';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`;
 
@@ -24,6 +26,25 @@ function BookPreviewContent() {
   const [totalBookPages, setTotalBookPages] = useState(0);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState('');
+  const [previewWaitMessageIndex, setPreviewWaitMessageIndex] = useState(0);
+  const { language } = useTranslation();
+  const isBn = language === 'bn';
+
+  const previewWaitMessages = isBn
+    ? [
+        'প্রিভিউ ইঞ্জিন প্রস্তুত করা হচ্ছে...',
+        'নিরাপদ প্রিভিউ পেজ আনা হচ্ছে...',
+        'পেজ স্ন্যাপশট রেন্ডার করা হচ্ছে...',
+        'আরও স্মুথ রিডিংয়ের জন্য অপ্টিমাইজ করা হচ্ছে...',
+        'প্রায় শেষ। আপনার প্রিভিউ খুলছে...',
+      ]
+    : [
+        'Warming up the preview engine...',
+        'Fetching secure preview pages...',
+        'Rendering page snapshots...',
+        'Optimizing quality for smoother reading...',
+        'Almost done. Your preview is opening...',
+      ];
 
   const bookId = params?.id;
   const bookTitle = searchParams.get('title') || 'Book Preview';
@@ -140,6 +161,19 @@ function BookPreviewContent() {
     };
   }, [previewUrl]);
 
+  useEffect(() => {
+    if (!isLoadingPreview) {
+      setPreviewWaitMessageIndex(0);
+      return undefined;
+    }
+
+    const intervalId = setInterval(() => {
+      setPreviewWaitMessageIndex((current) => (current + 1) % previewWaitMessages.length);
+    }, 1700);
+
+    return () => clearInterval(intervalId);
+  }, [isLoadingPreview, previewWaitMessages.length]);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar
@@ -172,10 +206,21 @@ function BookPreviewContent() {
                   <span className="h-8 w-2 animate-pulse rounded bg-cyan-200/80 [animation-delay:0.3s]" />
                 </div>
 
-                <h2 className="text-xl font-bold tracking-tight text-white">Book is loading, please wait</h2>
-                <p className="mt-2 text-sm leading-relaxed text-cyan-100/90">
-                  Turning pages for your preview and preparing the first 7 pages.
-                </p>
+                <h2 className="text-xl font-bold tracking-tight text-white">{isBn ? 'আপনার প্রিভিউ প্রস্তুত হচ্ছে' : 'Preparing your preview'}</h2>
+                <div className="mt-2 min-h-11">
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={previewWaitMessages[previewWaitMessageIndex]}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.28 }}
+                      className="text-sm leading-relaxed text-cyan-100/90"
+                    >
+                      {previewWaitMessages[previewWaitMessageIndex]}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
 
                 <div className="mt-6 overflow-hidden rounded-full bg-white/10">
                   <div className="h-1.5 w-1/2 animate-pulse rounded-full bg-linear-to-r from-cyan-200 via-cyan-300 to-blue-300" />

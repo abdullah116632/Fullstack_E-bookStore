@@ -145,7 +145,7 @@ export default function UpdatePasswordForm({
             isLoading={isLoading}
             className="flex-1 font-semibold"
           >
-            {isLoading ? t('auth.common.loading') : t('auth.updatePassword')}
+            {isLoading ? t('common.loading') : t('auth.updatePassword')}
           </Button>
           <Button
             type="button"

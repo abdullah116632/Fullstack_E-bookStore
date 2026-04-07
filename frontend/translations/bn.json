@@ -63,6 +63,9 @@
   "auth": {
     "loginTitle": "আপনার অ্যাকাউন্টে লগইন করুন",
     "signupTitle": "একটি অ্যাকাউন্ট তৈরি করুন",
+    "signupReaderTitle": "একটি পাঠক অ্যাকাউন্ট তৈরি করুন",
+    "signupPublisherTitle": "একটি প্রকাশক অ্যাকাউন্ট তৈরি করুন",
+    "signupAdminTitle": "একটি প্রশাসক অ্যাকাউন্ট তৈরি করুন",
     "loggingInAs": "লগইন করছেন",
     "signingUpAs": "সাইন আপ করছেন",
     "email": "ইমেল ঠিকানা",

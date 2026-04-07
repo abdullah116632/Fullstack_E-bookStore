@@ -183,7 +183,7 @@ export default function PublisherPage() {
               <div className="absolute -left-8 bottom-0 h-28 w-28 rounded-full bg-teal-300/20 blur-2xl" />
               <div className="relative">
                 <h2 className="text-2xl font-bold tracking-tight">Welcome{user?.fullName ? `, ${user.fullName}` : ''}</h2>
-                <p className="mt-2 max-w-2xl text-cyan-100/95">Your publishing workspace is ready. Start by uploading a new title and we'll keep it saved as draft.</p>
+                <p className="mt-2 max-w-2xl text-cyan-100/95">Your publishing workspace is ready. Start by uploading a new title and we&apos;ll keep it saved as draft.</p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                   <div className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm">
                     <p className="text-xs uppercase tracking-wide text-cyan-100">Status</p>

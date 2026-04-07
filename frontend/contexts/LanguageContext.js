@@ -1,18 +1,21 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
+  // Keep the first server and client render identical to avoid hydration mismatch.
   const [language, setLanguage] = useState('bn');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load language from localStorage on mount
   useEffect(() => {
     const savedLanguage = localStorage.getItem('language');
-    const resolvedLanguage = savedLanguage === 'en' || savedLanguage === 'bn' ? savedLanguage : 'bn';
-    setLanguage(resolvedLanguage);
+    if (savedLanguage === 'en' || savedLanguage === 'bn') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLanguage(savedLanguage);
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoaded(true);
   }, []);
 

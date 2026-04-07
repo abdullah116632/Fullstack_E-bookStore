@@ -22,8 +22,14 @@ import {
   adminResetPassword,
 } from '@/store/slices/authSlice';
 
+const getResetFlowStorageKey = (userType) => `auth-reset-flow:${userType || 'reader'}`;
+
 export default function ResetPasswordForm({
   userType = 'reader',
+  initialEmail,
+  forcedStep,
+  onEmailSubmitted,
+  onStepChange,
   onSuccess,
   onBackToLogin,
 }) {
@@ -35,6 +41,7 @@ export default function ResetPasswordForm({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
   const [errors, setErrors] = useState({});
+  const [isFlowRestored, setIsFlowRestored] = useState(false);
 
   const dispatch = useDispatch();
   const { isLoading } = useSelector((state) => state.auth);
@@ -61,6 +68,78 @@ export default function ResetPasswordForm({
     ? adminResetPassword
     : readerResetPassword;
 
+  const getNormalizedEmail = () => String(email || '').trim().toLowerCase();
+
+  const setFlowStep = (nextStep, { notifyParent = true } = {}) => {
+    if (nextStep !== 'email' && nextStep !== 'otp' && nextStep !== 'newPassword') return;
+    setStep(nextStep);
+    if (notifyParent && onStepChange) {
+      onStepChange(nextStep);
+    }
+  };
+
+  const clearPersistedResetFlow = () => {
+    localStorage.removeItem(getResetFlowStorageKey(userType));
+  };
+
+  useEffect(() => {
+    if (!initialEmail) return;
+    setEmail(String(initialEmail).trim().toLowerCase());
+  }, [initialEmail]);
+
+  useEffect(() => {
+    const rawSavedState = localStorage.getItem(getResetFlowStorageKey(userType));
+    if (!rawSavedState) {
+      if (forcedStep) {
+        setFlowStep(forcedStep, { notifyParent: false });
+      }
+      setIsFlowRestored(true);
+      return;
+    }
+
+    try {
+      const savedState = JSON.parse(rawSavedState);
+      if (
+        !forcedStep &&
+        (savedState?.step === 'email' || savedState?.step === 'otp' || savedState?.step === 'newPassword')
+      ) {
+        setFlowStep(savedState.step, { notifyParent: false });
+      }
+      if (typeof savedState?.email === 'string') {
+        setEmail(savedState.email);
+      }
+      if (typeof savedState?.resendTimer === 'number' && savedState.resendTimer > 0) {
+        setResendTimer(savedState.resendTimer);
+      }
+
+      if (forcedStep) {
+        setFlowStep(forcedStep, { notifyParent: false });
+      }
+    } catch {
+      localStorage.removeItem(getResetFlowStorageKey(userType));
+    } finally {
+      setIsFlowRestored(true);
+    }
+  }, [userType, forcedStep]);
+
+  useEffect(() => {
+    if (!forcedStep) return;
+    setFlowStep(forcedStep, { notifyParent: false });
+  }, [forcedStep]);
+
+  useEffect(() => {
+    if (!isFlowRestored) return;
+
+    localStorage.setItem(
+      getResetFlowStorageKey(userType),
+      JSON.stringify({
+        step,
+        email,
+        resendTimer,
+      })
+    );
+  }, [isFlowRestored, userType, step, email, resendTimer]);
+
   useEffect(() => {
     if (resendTimer <= 0) return undefined;
     const interval = setInterval(() => {
@@ -71,8 +150,9 @@ export default function ResetPasswordForm({
 
   const validateEmail = () => {
     const newErrors = {};
-    if (!email) newErrors.email = 'Email is required';
-    else if (!email.includes('@')) newErrors.email = 'Invalid email format';
+    const normalizedEmail = getNormalizedEmail();
+    if (!normalizedEmail) newErrors.email = 'Email is required';
+    else if (!normalizedEmail.includes('@')) newErrors.email = 'Invalid email format';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -81,6 +161,7 @@ export default function ResetPasswordForm({
     const newErrors = {};
     if (!otp) newErrors.otp = 'OTP is required';
     else if (otp.length !== 6) newErrors.otp = 'OTP must be 6 digits';
+    else if (!/^\d{6}$/.test(otp)) newErrors.otp = 'OTP must contain only numbers';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -101,12 +182,26 @@ export default function ResetPasswordForm({
     e.preventDefault();
     if (!validateEmail()) return;
 
+    const normalizedEmail = getNormalizedEmail();
+
     try {
       const response = await dispatch(
-        forgotPasswordAction({ email })
+        forgotPasswordAction({ email: normalizedEmail })
       ).unwrap();
       toast.success(response.message || t('auth.otpSent'));
-      setStep('otp');
+      setEmail(normalizedEmail);
+      localStorage.setItem(
+        getResetFlowStorageKey(userType),
+        JSON.stringify({
+          step: 'otp',
+          email: normalizedEmail,
+          resendTimer,
+        })
+      );
+      if (onEmailSubmitted) {
+        onEmailSubmitted(normalizedEmail);
+      }
+      setFlowStep('otp');
       setErrors({});
     } catch (err) {
       toast.error(err?.message || t('auth.otpFailed'));
@@ -117,12 +212,19 @@ export default function ResetPasswordForm({
     e.preventDefault();
     if (!validateOTP()) return;
 
+    const normalizedEmail = getNormalizedEmail() || String(initialEmail || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      setErrors({ email: 'Email is required' });
+      toast.error('Email is missing. Please request OTP again.');
+      return;
+    }
+
     try {
       const response = await dispatch(
-        verifyResetOTPAction({ email, otp })
+        verifyResetOTPAction({ email: normalizedEmail, otp: otp.trim() })
       ).unwrap();
       toast.success(response.message || t('auth.success'));
-      setStep('newPassword');
+      setFlowStep('newPassword');
       setErrors({});
     } catch (err) {
       toast.error(err?.message || t('auth.otpFailed'));
@@ -130,9 +232,16 @@ export default function ResetPasswordForm({
   };
 
   const handleResendOTP = async () => {
+    const normalizedEmail = getNormalizedEmail() || String(initialEmail || '').trim().toLowerCase();
+    if (!normalizedEmail) {
+      setErrors({ email: 'Email is required' });
+      toast.error('Email is missing. Please request OTP again.');
+      return;
+    }
+
     try {
       const response = await dispatch(
-        resendResetOTPAction({ email })
+        resendResetOTPAction({ email: normalizedEmail })
       ).unwrap();
       toast.success(response.message || t('auth.otpSent'));
       setResendTimer(120);
@@ -147,11 +256,19 @@ export default function ResetPasswordForm({
     e.preventDefault();
     if (!validatePassword()) return;
 
+    const normalizedEmail = getNormalizedEmail();
+    if (!normalizedEmail) {
+      setErrors({ email: 'Email is required' });
+      setFlowStep('email');
+      return;
+    }
+
     try {
       const response = await dispatch(
-        resetPasswordAction({ email, newPassword })
+        resetPasswordAction({ email: normalizedEmail, newPassword })
       ).unwrap();
       toast.success(response.message || t('auth.success'));
+      clearPersistedResetFlow();
       if (onSuccess) onSuccess();
     } catch (err) {
       toast.error(err?.message || t('auth.error'));
@@ -292,8 +409,8 @@ export default function ResetPasswordForm({
             <button
               type="button"
               onClick={() => {
-                if (step === 'otp') setStep('email');
-                else setStep('otp');
+                if (step === 'otp') setFlowStep('email');
+                else setFlowStep('otp');
                 setErrors({});
               }}
               className="w-full py-2 text-center text-sm font-medium text-slate-500 transition-colors duration-300 hover:text-slate-700"
@@ -304,7 +421,10 @@ export default function ResetPasswordForm({
 
           <button
             type="button"
-            onClick={onBackToLogin}
+            onClick={() => {
+              clearPersistedResetFlow();
+              onBackToLogin();
+            }}
             className="w-full py-2 text-center text-sm font-medium text-slate-500 transition-colors duration-300 hover:text-teal-700"
           >
             Back to Login

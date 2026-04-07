@@ -63,6 +63,9 @@
   "auth": {
     "loginTitle": "Login to Your Account",
     "signupTitle": "Create an Account",
+    "signupReaderTitle": "Create a Reader Account",
+    "signupPublisherTitle": "Create a Publisher Account",
+    "signupAdminTitle": "Create an Admin Account",
     "loggingInAs": "Logging in as",
     "signingUpAs": "Signing up as",
     "email": "Email Address",

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 import { ORDER_STATUS, PAYMENT_STATUS } from '../config/constants.js';
 
 const purchaseSchema = new mongoose.Schema(
@@ -120,12 +121,35 @@ const purchaseSchema = new mongoose.Schema(
 
 // Auto-generate order number before saving
 purchaseSchema.pre('save', async function (next) {
-  if (!this.isNew) return next();
+  if (!this.isNew || this.orderNumber) return next();
 
   try {
-    const count = await mongoose.model('Purchase').countDocuments();
-    const year = new Date().getFullYear();
-    this.orderNumber = `ORD-${year}-${String(count + 1).padStart(6, '0')}`;
+    const PurchaseModel = mongoose.model('Purchase');
+    const MAX_ATTEMPTS = 10;
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+      // 10-char uppercase alphanumeric random segment.
+      const randomSegment = crypto
+        .randomBytes(8)
+        .toString('base64url')
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toUpperCase()
+        .slice(0, 10);
+
+      const candidate = `ORD-${randomSegment}`;
+      // eslint-disable-next-line no-await-in-loop
+      const existing = await PurchaseModel.findOne({ orderNumber: candidate }).select('_id').lean();
+
+      if (!existing) {
+        this.orderNumber = candidate;
+        break;
+      }
+    }
+
+    if (!this.orderNumber) {
+      throw new Error('Failed to generate a unique order number.');
+    }
+
     next();
   } catch (error) {
     next(error);

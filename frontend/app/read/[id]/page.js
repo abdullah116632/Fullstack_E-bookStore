@@ -1,11 +1,13 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import toast from 'react-hot-toast';
 import Button from '@/components/common/Button';
 import { API_BASE_URL } from '@/constants/api';
+import { useTranslation } from '@/hooks/useTranslation';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`;
 
@@ -20,7 +22,26 @@ function ReaderBookContent() {
   const [desktopWidthMode, setDesktopWidthMode] = useState('medium');
   const [pageSearchValue, setPageSearchValue] = useState('1');
   const [currentPage, setCurrentPage] = useState(1);
+  const [readerWaitMessageIndex, setReaderWaitMessageIndex] = useState(0);
   const readerContainerRef = useRef(null);
+  const { language } = useTranslation();
+  const isBn = language === 'bn';
+
+  const readerWaitMessages = isBn
+    ? [
+        'আপনার কেনা বই আনলক করা হচ্ছে...',
+        'নিরাপদ স্টোরেজ থেকে পেজ লোড হচ্ছে...',
+        'উচ্চ মানের পেজ রেন্ডার করা হচ্ছে...',
+        'স্মুথ রিডিং মোড প্রস্তুত করা হচ্ছে...',
+        'শেষ ধাপ চলছে। এখনই বই খুলছে...',
+      ]
+    : [
+        'Unlocking your purchased book...',
+        'Loading pages from secure storage...',
+        'Rendering high-quality pages...',
+        'Setting up smooth reading mode...',
+        'Final touches. Opening your book now...',
+      ];
 
   const bookId = params?.id;
   const bookTitle = searchParams.get('title') || 'Read Book';
@@ -105,6 +126,19 @@ function ReaderBookContent() {
       isMounted = false;
     };
   }, [readUrl]);
+
+  useEffect(() => {
+    if (!isLoadingPages) {
+      setReaderWaitMessageIndex(0);
+      return undefined;
+    }
+
+    const intervalId = setInterval(() => {
+      setReaderWaitMessageIndex((current) => (current + 1) % readerWaitMessages.length);
+    }, 1700);
+
+    return () => clearInterval(intervalId);
+  }, [isLoadingPages, readerWaitMessages.length]);
 
   const pageTitle = useMemo(() => {
     if (!bookTitle) return 'Read Book';
@@ -229,8 +263,33 @@ function ReaderBookContent() {
               <div className="w-full max-w-md rounded-3xl border border-cyan-200/25 bg-linear-to-b from-white/15 to-white/5 p-8 shadow-2xl shadow-slate-950/40 backdrop-blur-md">
                 <div className="relative mx-auto mb-6 h-20 w-20">
                   <div className="absolute inset-0 animate-spin rounded-full border-2 border-cyan-300/20 border-t-cyan-200" />
+                  <div className="absolute inset-2 animate-pulse rounded-full border border-cyan-200/30" />
                 </div>
-                <h2 className="text-xl font-bold tracking-tight text-white">Book is loading, please wait</h2>
+                <div className="mx-auto mb-5 flex w-28 items-end justify-center gap-1.5">
+                  <span className="h-8 w-2 animate-pulse rounded bg-cyan-200/80 [animation-delay:-0.3s]" />
+                  <span className="h-11 w-2 animate-pulse rounded bg-cyan-300/90 [animation-delay:-0.15s]" />
+                  <span className="h-14 w-2 animate-pulse rounded bg-cyan-100 [animation-delay:0s]" />
+                  <span className="h-11 w-2 animate-pulse rounded bg-cyan-300/90 [animation-delay:0.15s]" />
+                  <span className="h-8 w-2 animate-pulse rounded bg-cyan-200/80 [animation-delay:0.3s]" />
+                </div>
+                <h2 className="text-xl font-bold tracking-tight text-white">{isBn ? 'আপনার বই খোলা হচ্ছে' : 'Opening your book'}</h2>
+                <div className="mt-2 min-h-11">
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={readerWaitMessages[readerWaitMessageIndex]}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.28 }}
+                      className="text-sm leading-relaxed text-cyan-100/90"
+                    >
+                      {readerWaitMessages[readerWaitMessageIndex]}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
+                <div className="mt-6 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-1.5 w-1/2 animate-pulse rounded-full bg-linear-to-r from-cyan-200 via-cyan-300 to-blue-300" />
+                </div>
               </div>
             </div>
           )}
