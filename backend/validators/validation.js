@@ -140,3 +140,8 @@ export const paginationValidation = [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be greater than 0'),
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
 ];
+
+export const updatePublisherActiveValidation = [
+  param('id').isMongoId().withMessage('Invalid ID format'),
+  body('isActive').isBoolean().withMessage('isActive must be a boolean'),
+];

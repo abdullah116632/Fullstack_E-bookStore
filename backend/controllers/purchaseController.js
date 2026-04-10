@@ -418,9 +418,8 @@ export const getUnlockedBookPdf = async (req, res, next) => {
       }
     }
 
-    const fileName = `${String(book.title || 'book').replace(/\s+/g, '-').toLowerCase()}.pdf`;
+    res.removeHeader('Content-Disposition');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
     res.setHeader('Cache-Control', 'no-store');
     return res.status(HTTP_STATUS.OK).send(Buffer.from(sourceBytes));
   } catch (error) {

@@ -48,6 +48,7 @@ export const AUTH_ENDPOINTS = {
   ADMIN_BOOKS: '/admin/books',
   ADMIN_READERS: '/admin/users/readers',
   ADMIN_PUBLISHERS: '/admin/users/publishers',
+  ADMIN_PUBLISHER_ACTIVE: '/admin/users/publishers',
 
   // Public Books
   BOOKS_PUBLIC: '/books',

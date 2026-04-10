@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
@@ -16,7 +16,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLi
 function BookPreviewContent() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authUserType, setAuthUserType] = useState('reader');
@@ -24,6 +23,7 @@ function BookPreviewContent() {
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewImages, setPreviewImages] = useState([]);
   const [totalBookPages, setTotalBookPages] = useState(0);
+  const [bookTitle, setBookTitle] = useState('Book Preview');
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState('');
   const [previewWaitMessageIndex, setPreviewWaitMessageIndex] = useState(0);
@@ -47,7 +47,6 @@ function BookPreviewContent() {
       ];
 
   const bookId = params?.id;
-  const bookTitle = searchParams.get('title') || 'Book Preview';
 
   const handleLoginClick = () => {
     setAuthUserType('reader');
@@ -91,9 +90,12 @@ function BookPreviewContent() {
         if (!response.ok) return;
 
         const payload = await response.json();
+        const resolvedTitle = payload?.data?.book?.title;
         const pages = Number(payload?.data?.book?.pages || 0);
+        setBookTitle(resolvedTitle || 'Book Preview');
         setTotalBookPages(Number.isNaN(pages) ? 0 : pages);
       } catch (error) {
+        setBookTitle('Book Preview');
         setTotalBookPages(0);
       }
     };

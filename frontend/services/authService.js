@@ -60,6 +60,8 @@ export const adminAuthService = {
     apiClient.get(`${AUTH_ENDPOINTS.ADMIN_READERS}?page=${page}&limit=${limit}&searchEmail=${encodeURIComponent(searchEmail)}`),
   getAllPublishers: (page = 1, limit = 50, searchEmail = '') =>
     apiClient.get(`${AUTH_ENDPOINTS.ADMIN_PUBLISHERS}?page=${page}&limit=${limit}&searchEmail=${encodeURIComponent(searchEmail)}`),
+  updatePublisherActiveStatus: (publisherId, isActive) =>
+    apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_PUBLISHER_ACTIVE}/${publisherId}/active`, { isActive }),
   updateBookControls: (bookId, data) => apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_BOOKS}/${bookId}`, data),
   deleteBook: (bookId) => apiClient.delete(`${AUTH_ENDPOINTS.ADMIN_BOOKS}/${bookId}`),
   getAllPurchases: (status = 'all', page = 1, limit = 50, searchBy = '', searchTerm = '') =>

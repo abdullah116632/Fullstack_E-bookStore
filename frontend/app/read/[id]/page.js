@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import toast from 'react-hot-toast';
 import Button from '@/components/common/Button';
@@ -14,8 +14,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLi
 function ReaderBookContent() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [readUrl, setReadUrl] = useState('');
+  const [bookTitle, setBookTitle] = useState('Read Book');
   const [pages, setPages] = useState([]);
   const [isLoadingPages, setIsLoadingPages] = useState(false);
   const [readError, setReadError] = useState('');
@@ -44,7 +44,6 @@ function ReaderBookContent() {
       ];
 
   const bookId = params?.id;
-  const bookTitle = searchParams.get('title') || 'Read Book';
 
   useEffect(() => {
     if (!bookId) return;
@@ -54,6 +53,28 @@ function ReaderBookContent() {
       : API_BASE_URL;
 
     setReadUrl(`${workingApiBaseUrl}/purchases/books/${bookId}/read`);
+
+    const loadBookTitle = async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+        const response = await fetch(`${workingApiBaseUrl}/purchases/my-books`, {
+          credentials: 'include',
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        const matchedBook = (payload?.data?.books || []).find((book) => String(book?._id) === String(bookId));
+        setBookTitle(matchedBook?.title || 'Read Book');
+      } catch (error) {
+        setBookTitle('Read Book');
+      }
+    };
+
+    loadBookTitle();
   }, [bookId]);
 
   useEffect(() => {

@@ -14,12 +14,20 @@ export const uploadPublisherBook = async (req, res, next) => {
       });
     }
 
-    const { title, author, description } = req.body;
+    const { title, author, description, price } = req.body;
 
-    if (!title || !author || !description) {
+    if (!title || !author || !description || price === undefined || price === null || String(price).trim() === '') {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        message: 'Title, author and description are required.',
+        message: 'Title, author, description and price are required.',
+      });
+    }
+
+    const parsedPrice = Number.parseFloat(String(price));
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        message: 'Price must be a valid non-negative number.',
       });
     }
 
@@ -87,6 +95,7 @@ export const uploadPublisherBook = async (req, res, next) => {
       title: title.trim(),
       author: author.trim(),
       description: description.trim(),
+      price: parsedPrice,
       publisher: req.user._id,
       coverImage: coverUpload.url,
       coverImagePublicId: coverUpload.publicId,

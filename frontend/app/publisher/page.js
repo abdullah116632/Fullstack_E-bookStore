@@ -25,6 +25,7 @@ export default function PublisherPage() {
   const [uploadForm, setUploadForm] = useState({
     title: '',
     author: '',
+    price: '',
     description: '',
     coverImage: null,
     bookFile: null,
@@ -74,6 +75,13 @@ export default function PublisherPage() {
     if (!uploadForm.title.trim()) newErrors.title = 'Book title is required';
     if (!uploadForm.author.trim()) newErrors.author = 'Author is required';
 
+    const parsedPrice = Number.parseFloat(uploadForm.price);
+    if (uploadForm.price === '') {
+      newErrors.price = 'Price is required';
+    } else if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      newErrors.price = 'Price must be a valid non-negative number';
+    }
+
     const wordCount = getWordCount(uploadForm.description);
     if (!uploadForm.description.trim()) {
       newErrors.description = 'Book description is required';
@@ -103,6 +111,19 @@ export default function PublisherPage() {
     }
   };
 
+  const handlePriceChange = (e) => {
+    const { value } = e.target;
+    const normalizedValue = value
+      .replace(',', '.')
+      .replace(/[^\d.]/g, '')
+      .replace(/(\..*)\./g, '$1');
+
+    setUploadForm((prev) => ({ ...prev, price: normalizedValue }));
+    if (uploadErrors.price) {
+      setUploadErrors((prev) => ({ ...prev, price: '' }));
+    }
+  };
+
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     setUploadForm((prev) => ({ ...prev, [name]: files?.[0] || null }));
@@ -121,6 +142,7 @@ export default function PublisherPage() {
       const formData = new FormData();
       formData.append('title', uploadForm.title.trim());
       formData.append('author', uploadForm.author.trim());
+      formData.append('price', String(Number.parseFloat(uploadForm.price)));
       formData.append('description', uploadForm.description.trim());
       formData.append('coverImage', uploadForm.coverImage);
       formData.append('bookFile', uploadForm.bookFile);
@@ -131,6 +153,7 @@ export default function PublisherPage() {
       setUploadForm({
         title: '',
         author: '',
+        price: '',
         description: '',
         coverImage: null,
         bookFile: null,
@@ -228,6 +251,19 @@ export default function PublisherPage() {
                     onChange={handleFieldChange}
                     error={uploadErrors.author}
                     placeholder="Enter author name"
+                    required
+                  />
+
+                  <Input
+                    label="Price (BDT)"
+                    type="text"
+                    name="price"
+                    inputMode="decimal"
+                    pattern="^\d*(\.\d{0,2})?$"
+                    value={uploadForm.price}
+                    onChange={handlePriceChange}
+                    error={uploadErrors.price}
+                    placeholder="Enter book price (e.g. 199.99)"
                     required
                   />
 

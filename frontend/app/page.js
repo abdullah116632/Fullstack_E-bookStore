@@ -180,8 +180,7 @@ export default function Home() {
       return;
     }
 
-    const encodedTitle = encodeURIComponent(book.title || 'Book Preview');
-    router.push(`/preview/${book._id}?title=${encodedTitle}`);
+    router.push(`/preview/${book._id}`);
   };
 
   return (

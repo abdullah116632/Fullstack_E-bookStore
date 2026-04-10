@@ -73,6 +73,7 @@ export default function AdminPage() {
     hasPrevPage: false,
   });
   const [bookActionLoadingId, setBookActionLoadingId] = useState('');
+  const [publisherActionLoadingId, setPublisherActionLoadingId] = useState('');
   const [purchaseActionLoadingId, setPurchaseActionLoadingId] = useState('');
   const [expandedBookIds, setExpandedBookIds] = useState([]);
   const [expandedPurchaseIds, setExpandedPurchaseIds] = useState([]);
@@ -280,6 +281,24 @@ export default function AdminPage() {
       toast.error(error.response?.data?.message || 'Failed to update checked status');
     } finally {
       setPurchaseActionLoadingId('');
+    }
+  };
+
+  const handleTogglePublisherActive = async (publisher) => {
+    const nextIsActive = !Boolean(publisher.isActive);
+    const actionLabel = nextIsActive ? 'activate' : 'deactivate';
+    const confirmed = window.confirm(`Are you sure you want to ${actionLabel} ${publisher.publisherName || publisher.fullName}?`);
+    if (!confirmed) return;
+
+    try {
+      setPublisherActionLoadingId(publisher._id);
+      await adminAuthService.updatePublisherActiveStatus(publisher._id, nextIsActive);
+      toast.success(`Publisher ${nextIsActive ? 'activated' : 'deactivated'} successfully`);
+      await fetchAllPublishers(publisherPage, publisherSearchEmail);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update publisher status');
+    } finally {
+      setPublisherActionLoadingId('');
     }
   };
 
@@ -1119,6 +1138,16 @@ export default function AdminPage() {
                         <p className="text-xs text-slate-500">Approval: {publisher.isApproved ? 'Approved' : 'Pending'}</p>
                         <p className="text-xs text-slate-500">Status: {publisher.isActive ? 'Active' : 'Inactive'}</p>
                         <p className="text-xs text-slate-500">Joined: {formatDate(publisher.createdAt)}</p>
+                        <div className="mt-3">
+                          <Button
+                            variant={publisher.isActive ? 'danger' : 'success'}
+                            size="sm"
+                            onClick={() => handleTogglePublisherActive(publisher)}
+                            isLoading={publisherActionLoadingId === publisher._id}
+                          >
+                            {publisher.isActive ? 'Deactivate Publisher' : 'Activate Publisher'}
+                          </Button>
+                        </div>
                       </div>
                     ))
                   )}

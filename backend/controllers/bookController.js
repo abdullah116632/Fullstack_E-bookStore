@@ -201,10 +201,8 @@ export const getBookPreviewPdf = async (req, res, next) => {
     copiedPages.forEach((page) => previewPdf.addPage(page));
 
     const previewBytes = await previewPdf.save();
-    const fileName = `${String(book.title || 'book-preview').replace(/\s+/g, '-').toLowerCase()}-preview.pdf`;
-
+    res.removeHeader('Content-Disposition');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
     res.setHeader('Cache-Control', 'no-store');
     return res.status(HTTP_STATUS.OK).send(Buffer.from(previewBytes));
   } catch (error) {

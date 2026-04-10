@@ -151,8 +151,7 @@ export default function ActiveBooksPage() {
       return;
     }
 
-    const encodedTitle = encodeURIComponent(book.title || text.readerFallbackTitle);
-    router.push(`/read/${book._id}?title=${encodedTitle}`);
+    router.push(`/read/${book._id}`);
   };
 
   const containerVariants = {

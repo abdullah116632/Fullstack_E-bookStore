@@ -106,3 +106,40 @@ export const getAllPublishersForAdmin = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updatePublisherActiveStatus = async (req, res, next) => {
+  try {
+    if (!ensureAdmin(req, res)) return;
+
+    const { id } = req.params;
+    const isActive = req.body.isActive;
+
+    const publisher = await Publisher.findByIdAndUpdate(
+      id,
+      { isActive },
+      {
+        new: true,
+        runValidators: true,
+      }
+    )
+      .select('publisherName fullName email isActive isApproved isEmailVerified createdAt')
+      .lean();
+
+    if (!publisher) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Publisher not found.',
+      });
+    }
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: `Publisher ${isActive ? 'activated' : 'deactivated'} successfully.`,
+      data: {
+        publisher,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
