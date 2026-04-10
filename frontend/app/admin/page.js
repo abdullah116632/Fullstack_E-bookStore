@@ -13,6 +13,7 @@ import { logout } from '@/store/slices/authSlice';
 
 export default function AdminPage() {
   const mainAdminApprovalEmail = 'abdullah116632@gmail.com';
+  const ADMIN_LIST_PAGE_LIMIT = 50;
   const dispatch = useDispatch();
   const { isAuthenticated, userType, user } = useSelector((state) => state.auth);
 
@@ -26,10 +27,51 @@ export default function AdminPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [createErrors, setCreateErrors] = useState({});
   const [bookList, setBookList] = useState([]);
+  const [bookSearchPublisher, setBookSearchPublisher] = useState('');
+  const [bookPage, setBookPage] = useState(1);
+  const [bookPagination, setBookPagination] = useState({
+    page: 1,
+    limit: ADMIN_LIST_PAGE_LIMIT,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [readerList, setReaderList] = useState([]);
+  const [readerSearchEmail, setReaderSearchEmail] = useState('');
   const [publisherList, setPublisherList] = useState([]);
+  const [publisherSearchEmail, setPublisherSearchEmail] = useState('');
+  const [readerPage, setReaderPage] = useState(1);
+  const [readerPagination, setReaderPagination] = useState({
+    page: 1,
+    limit: ADMIN_LIST_PAGE_LIMIT,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
+  const [publisherPage, setPublisherPage] = useState(1);
+  const [publisherPagination, setPublisherPagination] = useState({
+    page: 1,
+    limit: ADMIN_LIST_PAGE_LIMIT,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [purchaseList, setPurchaseList] = useState([]);
   const [purchaseFilter, setPurchaseFilter] = useState('all');
+  const [purchaseSearchBy, setPurchaseSearchBy] = useState('ordernumber');
+  const [purchaseSearchTerm, setPurchaseSearchTerm] = useState('');
+  const [purchasePage, setPurchasePage] = useState(1);
+  const [purchasePagination, setPurchasePagination] = useState({
+    page: 1,
+    limit: ADMIN_LIST_PAGE_LIMIT,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const [bookActionLoadingId, setBookActionLoadingId] = useState('');
   const [purchaseActionLoadingId, setPurchaseActionLoadingId] = useState('');
   const [expandedBookIds, setExpandedBookIds] = useState([]);
@@ -88,11 +130,23 @@ export default function AdminPage() {
     }
   };
 
-  const fetchAllBooks = async () => {
+  const fetchAllBooks = async (page = bookPage, searchPublisher = bookSearchPublisher) => {
     try {
       setIsLoading(true);
-      const response = await adminAuthService.getAllBooks();
-      setBookList(response.data?.data?.books || []);
+      const response = await adminAuthService.getAllBooks(page, ADMIN_LIST_PAGE_LIMIT, searchPublisher);
+      const books = response.data?.data?.books || [];
+      const pagination = response.data?.data?.pagination || {
+        page,
+        limit: ADMIN_LIST_PAGE_LIMIT,
+        total: books.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: page > 1,
+      };
+
+      setBookList(books);
+      setBookPage(pagination.page || page);
+      setBookPagination(pagination);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load books');
     } finally {
@@ -100,11 +154,23 @@ export default function AdminPage() {
     }
   };
 
-  const fetchAllReaders = async () => {
+  const fetchAllReaders = async (page = readerPage, searchEmail = readerSearchEmail) => {
     try {
       setIsLoading(true);
-      const response = await adminAuthService.getAllReaders();
-      setReaderList(response.data?.data?.readers || []);
+      const response = await adminAuthService.getAllReaders(page, ADMIN_LIST_PAGE_LIMIT, searchEmail);
+      const readers = response.data?.data?.readers || [];
+      const pagination = response.data?.data?.pagination || {
+        page,
+        limit: ADMIN_LIST_PAGE_LIMIT,
+        total: readers.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: page > 1,
+      };
+
+      setReaderList(readers);
+      setReaderPage(pagination.page || page);
+      setReaderPagination(pagination);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load readers');
     } finally {
@@ -112,11 +178,23 @@ export default function AdminPage() {
     }
   };
 
-  const fetchAllPublishers = async () => {
+  const fetchAllPublishers = async (page = publisherPage, searchEmail = publisherSearchEmail) => {
     try {
       setIsLoading(true);
-      const response = await adminAuthService.getAllPublishers();
-      setPublisherList(response.data?.data?.publishers || []);
+      const response = await adminAuthService.getAllPublishers(page, ADMIN_LIST_PAGE_LIMIT, searchEmail);
+      const publishers = response.data?.data?.publishers || [];
+      const pagination = response.data?.data?.pagination || {
+        page,
+        limit: ADMIN_LIST_PAGE_LIMIT,
+        total: publishers.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: page > 1,
+      };
+
+      setPublisherList(publishers);
+      setPublisherPage(pagination.page || page);
+      setPublisherPagination(pagination);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load publishers');
     } finally {
@@ -124,11 +202,34 @@ export default function AdminPage() {
     }
   };
 
-  const fetchAllPurchases = async (status = purchaseFilter) => {
+  const fetchAllPurchases = async (
+    status = purchaseFilter,
+    page = purchasePage,
+    searchBy = purchaseSearchBy,
+    searchTerm = purchaseSearchTerm
+  ) => {
     try {
       setIsLoading(true);
-      const response = await adminAuthService.getAllPurchases(status);
-      setPurchaseList(response.data?.data?.purchases || []);
+      const response = await adminAuthService.getAllPurchases(
+        status,
+        page,
+        ADMIN_LIST_PAGE_LIMIT,
+        searchBy,
+        searchTerm
+      );
+      const purchases = response.data?.data?.purchases || [];
+      const pagination = response.data?.data?.pagination || {
+        page,
+        limit: ADMIN_LIST_PAGE_LIMIT,
+        total: purchases.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: page > 1,
+      };
+
+      setPurchaseList(purchases);
+      setPurchasePage(pagination.page || page);
+      setPurchasePagination(pagination);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load purchases');
     } finally {
@@ -141,7 +242,7 @@ export default function AdminPage() {
       setPurchaseActionLoadingId(purchase._id);
       await adminAuthService.approvePurchase(purchase._id);
       toast.success(`Activated ${purchase.orderNumber}`);
-      await fetchAllPurchases(purchaseFilter);
+      await fetchAllPurchases(purchaseFilter, purchasePage, purchaseSearchBy, purchaseSearchTerm);
       await fetchDashboard();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to activate purchase');
@@ -159,10 +260,24 @@ export default function AdminPage() {
       setPurchaseActionLoadingId(purchase._id);
       await adminAuthService.deactivatePurchase(purchase._id, { reason });
       toast.success(`Deactivated ${purchase.orderNumber}`);
-      await fetchAllPurchases(purchaseFilter);
+      await fetchAllPurchases(purchaseFilter, purchasePage, purchaseSearchBy, purchaseSearchTerm);
       await fetchDashboard();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to deactivate purchase');
+    } finally {
+      setPurchaseActionLoadingId('');
+    }
+  };
+
+  const handleTogglePurchaseChecked = async (purchase) => {
+    try {
+      setPurchaseActionLoadingId(purchase._id);
+      const nextChecked = !Boolean(purchase.isChecked);
+      await adminAuthService.markPurchaseChecked(purchase._id, nextChecked);
+      toast.success(`${purchase.orderNumber} marked as ${nextChecked ? 'checked' : 'unchecked'}`);
+      await fetchAllPurchases(purchaseFilter, purchasePage, purchaseSearchBy, purchaseSearchTerm);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update checked status');
     } finally {
       setPurchaseActionLoadingId('');
     }
@@ -172,23 +287,32 @@ export default function AdminPage() {
     setActivePanel(panel);
 
     if (panel === 'books') {
-      await fetchAllBooks();
+      setBookSearchPublisher('');
+      setBookPage(1);
+      await fetchAllBooks(1, '');
       return;
     }
 
     if (panel === 'sales') {
       setPurchaseFilter('all');
-      await fetchAllPurchases('all');
+      setPurchaseSearchBy('ordernumber');
+      setPurchaseSearchTerm('');
+      setPurchasePage(1);
+      await fetchAllPurchases('all', 1, 'ordernumber', '');
       return;
     }
 
     if (panel === 'users') {
-      await fetchAllReaders();
+      setReaderSearchEmail('');
+      setReaderPage(1);
+      await fetchAllReaders(1, '');
       return;
     }
 
     if (panel === 'publishers') {
-      await fetchAllPublishers();
+      setPublisherSearchEmail('');
+      setPublisherPage(1);
+      await fetchAllPublishers(1, '');
     }
   };
 
@@ -197,7 +321,7 @@ export default function AdminPage() {
       setBookActionLoadingId(book._id);
       await adminAuthService.updateBookControls(book._id, { isFeatured: !book.isFeatured });
       toast.success(`Featured ${!book.isFeatured ? 'enabled' : 'disabled'} for ${book.title}`);
-      await fetchAllBooks();
+      await fetchAllBooks(bookPage, bookSearchPublisher);
       await fetchDashboard();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update featured option');
@@ -212,7 +336,7 @@ export default function AdminPage() {
       setBookActionLoadingId(book._id);
       await adminAuthService.updateBookControls(book._id, { visibility: nextVisibility });
       toast.success(`Visibility set to ${nextVisibility} for ${book.title}`);
-      await fetchAllBooks();
+      await fetchAllBooks(bookPage, bookSearchPublisher);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update visibility');
     } finally {
@@ -228,7 +352,7 @@ export default function AdminPage() {
       setBookActionLoadingId(book._id);
       await adminAuthService.deleteBook(book._id);
       toast.success(`Deleted ${book.title}`);
-      await fetchAllBooks();
+      await fetchAllBooks(bookPage, bookSearchPublisher);
       await fetchDashboard();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete book');
@@ -482,9 +606,71 @@ export default function AdminPage() {
               <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-lg font-bold text-slate-900">All Books List</h3>
-                  <Button variant="outline" size="sm" onClick={fetchAllBooks} isLoading={isLoading}>
+                  <Button variant="outline" size="sm" onClick={() => fetchAllBooks(bookPage, bookSearchPublisher)} isLoading={isLoading}>
                     Refresh List
                   </Button>
+                </div>
+
+                <div className="mb-4 grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[1fr_auto]">
+                  <input
+                    type="text"
+                    value={bookSearchPublisher}
+                    onChange={(event) => setBookSearchPublisher(event.target.value)}
+                    placeholder="Search books by publisher"
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={async () => {
+                        setBookPage(1);
+                        await fetchAllBooks(1, bookSearchPublisher);
+                      }}
+                      isLoading={isLoading}
+                    >
+                      Search
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setBookSearchPublisher('');
+                        setBookPage(1);
+                        await fetchAllBooks(1, '');
+                      }}
+                      disabled={isLoading}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-xs font-medium text-slate-600">
+                    Showing up to {bookPagination.limit} books per page. Total: {bookPagination.total}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAllBooks(Math.max(1, bookPage - 1), bookSearchPublisher)}
+                      disabled={!bookPagination.hasPrevPage || isLoading}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      Page {bookPage} of {bookPagination.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAllBooks(bookPage + 1, bookSearchPublisher)}
+                      disabled={!bookPagination.hasNextPage || isLoading}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -562,16 +748,110 @@ export default function AdminPage() {
                       onChange={async (event) => {
                         const nextFilter = event.target.value;
                         setPurchaseFilter(nextFilter);
-                        await fetchAllPurchases(nextFilter);
+                        setPurchasePage(1);
+                        await fetchAllPurchases(nextFilter, 1, purchaseSearchBy, purchaseSearchTerm);
                       }}
                       className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700"
                     >
                       <option value="pending">Pending</option>
                       <option value="approved">Approved</option>
+                      <option value="marked">Marked</option>
+                      <option value="unmarked">Unmarked</option>
                       <option value="all">All</option>
                     </select>
-                    <Button variant="outline" size="sm" onClick={() => fetchAllPurchases(purchaseFilter)} isLoading={isLoading}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAllPurchases(purchaseFilter, purchasePage, purchaseSearchBy, purchaseSearchTerm)}
+                      isLoading={isLoading}
+                    >
                       Refresh List
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mb-4 grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[190px_1fr_auto]">
+                  <select
+                    value={purchaseSearchBy}
+                    onChange={(event) => setPurchaseSearchBy(event.target.value)}
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700"
+                  >
+                    <option value="number">Phone Number</option>
+                    <option value="email">Email</option>
+                    <option value="ordernumber">Order Number</option>
+                  </select>
+                  <input
+                    type="text"
+                    value={purchaseSearchTerm}
+                    onChange={(event) => setPurchaseSearchTerm(event.target.value)}
+                    placeholder="Enter value to search"
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={async () => {
+                        setPurchasePage(1);
+                        await fetchAllPurchases(purchaseFilter, 1, purchaseSearchBy, purchaseSearchTerm);
+                      }}
+                      isLoading={isLoading}
+                    >
+                      Search
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setPurchaseSearchBy('ordernumber');
+                        setPurchaseSearchTerm('');
+                        setPurchasePage(1);
+                        await fetchAllPurchases(purchaseFilter, 1, 'ordernumber', '');
+                      }}
+                      disabled={isLoading}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-xs font-medium text-slate-600">
+                    Showing up to {purchasePagination.limit} sales per page. Total: {purchasePagination.total}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        fetchAllPurchases(
+                          purchaseFilter,
+                          Math.max(1, purchasePage - 1),
+                          purchaseSearchBy,
+                          purchaseSearchTerm
+                        )
+                      }
+                      disabled={!purchasePagination.hasPrevPage || isLoading}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      Page {purchasePage} of {purchasePagination.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        fetchAllPurchases(
+                          purchaseFilter,
+                          purchasePage + 1,
+                          purchaseSearchBy,
+                          purchaseSearchTerm
+                        )
+                      }
+                      disabled={!purchasePagination.hasNextPage || isLoading}
+                    >
+                      Next
                     </Button>
                   </div>
                 </div>
@@ -602,6 +882,14 @@ export default function AdminPage() {
                                 onClick={() => togglePurchaseExpand(purchase._id)}
                               >
                                 {expandedPurchaseIds.includes(purchase._id) ? 'Hide Details' : 'Expand'}
+                              </Button>
+                              <Button
+                                variant={purchase.isChecked ? 'success' : 'outline'}
+                                size="sm"
+                                onClick={() => handleTogglePurchaseChecked(purchase)}
+                                isLoading={purchaseActionLoadingId === purchase._id}
+                              >
+                                {purchase.isChecked ? 'checked' : 'mark checked'}
                               </Button>
                               {isApproved ? (
                                 <>
@@ -645,6 +933,7 @@ export default function AdminPage() {
                               <p className="text-xs text-slate-500">Approved By: {purchase.accessControl?.approvedBy?.fullName || '-'}</p>
                               <p className="text-xs text-slate-500">Deactivated At: {formatDateTime(purchase.accessControl?.deactivatedAt)}</p>
                               <p className="text-xs text-slate-500">Deactivated Reason: {purchase.accessControl?.deactivatedReason || '-'}</p>
+                              <p className="text-xs text-slate-500">Checked by Admin: {purchase.isChecked ? 'Yes' : 'No'}</p>
                             </div>
                           )}
                         </div>
@@ -659,9 +948,71 @@ export default function AdminPage() {
               <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-lg font-bold text-slate-900">All Readers List</h3>
-                  <Button variant="outline" size="sm" onClick={fetchAllReaders} isLoading={isLoading}>
+                  <Button variant="outline" size="sm" onClick={() => fetchAllReaders(readerPage, readerSearchEmail)} isLoading={isLoading}>
                     Refresh List
                   </Button>
+                </div>
+
+                <div className="mb-4 grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[1fr_auto]">
+                  <input
+                    type="text"
+                    value={readerSearchEmail}
+                    onChange={(event) => setReaderSearchEmail(event.target.value)}
+                    placeholder="Search reader by email"
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={async () => {
+                        setReaderPage(1);
+                        await fetchAllReaders(1, readerSearchEmail);
+                      }}
+                      isLoading={isLoading}
+                    >
+                      Search
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setReaderSearchEmail('');
+                        setReaderPage(1);
+                        await fetchAllReaders(1, '');
+                      }}
+                      disabled={isLoading}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-xs font-medium text-slate-600">
+                    Showing up to {readerPagination.limit} readers per page. Total: {readerPagination.total}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAllReaders(Math.max(1, readerPage - 1), readerSearchEmail)}
+                      disabled={!readerPagination.hasPrevPage || isLoading}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      Page {readerPage} of {readerPagination.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAllReaders(readerPage + 1, readerSearchEmail)}
+                      disabled={!readerPagination.hasNextPage || isLoading}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -685,9 +1036,76 @@ export default function AdminPage() {
               <div>
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-lg font-bold text-slate-900">All Publishers List</h3>
-                  <Button variant="outline" size="sm" onClick={fetchAllPublishers} isLoading={isLoading}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchAllPublishers(publisherPage, publisherSearchEmail)}
+                    isLoading={isLoading}
+                  >
                     Refresh List
                   </Button>
+                </div>
+
+                <div className="mb-4 grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[1fr_auto]">
+                  <input
+                    type="text"
+                    value={publisherSearchEmail}
+                    onChange={(event) => setPublisherSearchEmail(event.target.value)}
+                    placeholder="Search publisher by email"
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={async () => {
+                        setPublisherPage(1);
+                        await fetchAllPublishers(1, publisherSearchEmail);
+                      }}
+                      isLoading={isLoading}
+                    >
+                      Search
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setPublisherSearchEmail('');
+                        setPublisherPage(1);
+                        await fetchAllPublishers(1, '');
+                      }}
+                      disabled={isLoading}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-xs font-medium text-slate-600">
+                    Showing up to {publisherPagination.limit} publishers per page. Total: {publisherPagination.total}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAllPublishers(Math.max(1, publisherPage - 1), publisherSearchEmail)}
+                      disabled={!publisherPagination.hasPrevPage || isLoading}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      Page {publisherPage} of {publisherPagination.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAllPublishers(publisherPage + 1, publisherSearchEmail)}
+                      disabled={!publisherPagination.hasNextPage || isLoading}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-3">

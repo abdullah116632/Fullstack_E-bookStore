@@ -43,10 +43,10 @@ export default function Navbar({
   const mobileLinkClass = (href) => {
     const isActive = isActivePath(href);
     return [
-      'mb-3 block rounded-lg px-4 py-3 text-sm font-semibold transition-colors duration-300',
+      'block rounded-xl border px-3 py-3 text-center text-sm font-semibold transition-all duration-300',
       isActive
-        ? 'bg-linear-to-r from-amber-200 to-rose-200 text-rose-900 ring-1 ring-amber-400'
-        : 'text-slate-700 hover:bg-amber-100 hover:text-rose-800',
+        ? 'border-amber-400 bg-linear-to-r from-amber-200 to-rose-200 text-rose-900 shadow-sm shadow-amber-300/45'
+        : 'border-emerald-200 bg-white/80 text-slate-700 hover:border-amber-300 hover:bg-amber-100/80 hover:text-rose-800',
     ].join(' ');
   };
 
@@ -167,20 +167,22 @@ export default function Navbar({
                   <p className="text-sm font-bold text-slate-800">{user?.fullName}</p>
                   <p className="text-xs font-medium capitalize text-slate-500">{userType}</p>
                 </div>
-                <Link
-                  href="/books"
-                  className={mobileLinkClass('/books')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t('nav.allBooks')}
-                </Link>
-                <Link
-                  href="/active-book"
-                  className={mobileLinkClass('/active-book')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t('nav.yourBooks')}
-                </Link>
+                <div className="mb-4 grid grid-cols-2 gap-2 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-2">
+                  <Link
+                    href="/books"
+                    className={mobileLinkClass('/books')}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {t('nav.allBooks')}
+                  </Link>
+                  <Link
+                    href="/active-book"
+                    className={mobileLinkClass('/active-book')}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {t('nav.yourBooks')}
+                  </Link>
+                </div>
                 <Button
                   variant="danger"
                   size="sm"
@@ -193,20 +195,22 @@ export default function Navbar({
               </>
             ) : (
               <>
-                <Link
-                  href="/books"
-                  className={mobileLinkClass('/books')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t('nav.allBooks')}
-                </Link>
-                <Link
-                  href="/active-book"
-                  className={mobileLinkClass('/active-book')}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t('nav.yourBooks')}
-                </Link>
+                <div className="mb-4 grid grid-cols-2 gap-2 rounded-2xl border border-emerald-200/80 bg-emerald-50/60 p-2">
+                  <Link
+                    href="/books"
+                    className={mobileLinkClass('/books')}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {t('nav.allBooks')}
+                  </Link>
+                  <Link
+                    href="/active-book"
+                    className={mobileLinkClass('/active-book')}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {t('nav.yourBooks')}
+                  </Link>
+                </div>
                 <Button
                   variant="outline"
                   size="md"

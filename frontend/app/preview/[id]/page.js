@@ -83,7 +83,7 @@ function BookPreviewContent() {
       ? localStorage.getItem('apiBaseUrl') || API_BASE_URL
       : API_BASE_URL;
 
-    setPreviewUrl(`${workingApiBaseUrl}/books/${bookId}/preview?pages=7`);
+    setPreviewUrl(`${workingApiBaseUrl}/books/${bookId}/preview?pages=10`);
 
     const loadBookDetails = async () => {
       try {
@@ -254,7 +254,7 @@ function BookPreviewContent() {
             <div className="text-left">
               <p className="text-sm font-semibold uppercase tracking-[0.08em] text-cyan-200">Read Few Pages</p>
               <h1 className="mt-1 text-xl font-bold text-white wrap-break-word">{bookTitle || 'Book Preview'}</h1>
-              <p className="text-sm text-slate-300">Preview is limited to first 7 pages.</p>
+              <p className="text-sm text-slate-300">Preview is limited to first 10 pages.</p>
               <p className="mt-2 text-sm font-medium text-cyan-100">Total Pages: {totalBookPages || '-'}</p>
             </div>
             <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => router.push('/')}>

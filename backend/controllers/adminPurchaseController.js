@@ -21,6 +21,11 @@ export const getAllPurchasesForAdmin = async (req, res, next) => {
     await runAutoActivation();
 
     const status = String(req.query.status || 'all').toLowerCase();
+    const searchBy = String(req.query.searchBy || '').toLowerCase();
+    const searchTerm = String(req.query.searchTerm || '').trim();
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, Math.min(Number.parseInt(req.query.limit, 10) || 50, 100));
+    const skip = (page - 1) * limit;
     const filter = {};
 
     if (status === 'pending') {
@@ -30,19 +35,54 @@ export const getAllPurchasesForAdmin = async (req, res, next) => {
     } else if (status === 'approved') {
       filter.status = ORDER_STATUS.COMPLETED;
       filter['accessControl.isUnlocked'] = true;
+    } else if (status === 'marked') {
+      filter.isChecked = true;
+    } else if (status === 'unmarked') {
+      filter.isChecked = false;
     }
+
+    if (searchTerm) {
+      if (searchBy === 'ordernumber') {
+        filter.orderNumber = { $regex: searchTerm, $options: 'i' };
+      } else if (searchBy === 'number') {
+        const normalizedDigits = searchTerm.replace(/\D/g, '');
+        if (normalizedDigits) {
+          filter['paymentDetails.senderMobileNumber'] = { $regex: normalizedDigits, $options: 'i' };
+        }
+      } else if (searchBy === 'email') {
+        filter.buyerEmail = { $regex: searchTerm.toLowerCase(), $options: 'i' };
+      }
+    }
+
+    const total = await Purchase.countDocuments(filter);
 
     const purchases = await Purchase.find(filter)
       .populate('buyer', 'fullName email')
       .populate('books.bookId', 'title author price')
       .populate('accessControl.approvedBy', 'fullName email')
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
 
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       data: {
         purchases,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+        search: {
+          searchBy: searchBy || null,
+          searchTerm: searchTerm || null,
+        },
       },
     });
   } catch (error) {
@@ -149,6 +189,37 @@ export const deactivatePurchaseByAdmin = async (req, res, next) => {
       data: {
         purchaseId: purchase._id,
         status: purchase.status,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markPurchaseCheckedByAdmin = async (req, res, next) => {
+  try {
+    if (!ensureAdmin(req, res)) return;
+
+    const { id } = req.params;
+    const hasExplicitValue = typeof req.body?.isChecked === 'boolean';
+
+    const purchase = await Purchase.findById(id);
+    if (!purchase) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Purchase not found.',
+      });
+    }
+
+    purchase.isChecked = hasExplicitValue ? req.body.isChecked : !Boolean(purchase.isChecked);
+    await purchase.save();
+
+    return res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: `Purchase marked as ${purchase.isChecked ? 'checked' : 'unchecked'}.`,
+      data: {
+        purchaseId: purchase._id,
+        isChecked: purchase.isChecked,
       },
     });
   } catch (error) {

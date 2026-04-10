@@ -54,12 +54,20 @@ export const adminAuthService = {
   updatePassword: (data) => apiClient.put(AUTH_ENDPOINTS.ADMIN_UPDATE_PASSWORD, data),
   getProfile: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_PROFILE),
   getDashboard: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_DASHBOARD),
-  getAllBooks: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_BOOKS),
-  getAllReaders: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_READERS),
-  getAllPublishers: () => apiClient.get(AUTH_ENDPOINTS.ADMIN_PUBLISHERS),
+  getAllBooks: (page = 1, limit = 50, searchPublisher = '') =>
+    apiClient.get(`${AUTH_ENDPOINTS.ADMIN_BOOKS}?page=${page}&limit=${limit}&searchPublisher=${encodeURIComponent(searchPublisher)}`),
+  getAllReaders: (page = 1, limit = 50, searchEmail = '') =>
+    apiClient.get(`${AUTH_ENDPOINTS.ADMIN_READERS}?page=${page}&limit=${limit}&searchEmail=${encodeURIComponent(searchEmail)}`),
+  getAllPublishers: (page = 1, limit = 50, searchEmail = '') =>
+    apiClient.get(`${AUTH_ENDPOINTS.ADMIN_PUBLISHERS}?page=${page}&limit=${limit}&searchEmail=${encodeURIComponent(searchEmail)}`),
   updateBookControls: (bookId, data) => apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_BOOKS}/${bookId}`, data),
   deleteBook: (bookId) => apiClient.delete(`${AUTH_ENDPOINTS.ADMIN_BOOKS}/${bookId}`),
-  getAllPurchases: (status = 'all') => apiClient.get(`${AUTH_ENDPOINTS.ADMIN_PURCHASES}?status=${status}`),
+  getAllPurchases: (status = 'all', page = 1, limit = 50, searchBy = '', searchTerm = '') =>
+    apiClient.get(
+      `${AUTH_ENDPOINTS.ADMIN_PURCHASES}?status=${status}&page=${page}&limit=${limit}&searchBy=${encodeURIComponent(searchBy)}&searchTerm=${encodeURIComponent(searchTerm)}`
+    ),
   approvePurchase: (purchaseId) => apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_PURCHASES}/${purchaseId}/approve`),
   deactivatePurchase: (purchaseId, data) => apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_PURCHASES}/${purchaseId}/deactivate`, data),
+  markPurchaseChecked: (purchaseId, isChecked) =>
+    apiClient.patch(`${AUTH_ENDPOINTS.ADMIN_PURCHASES}/${purchaseId}/check`, { isChecked }),
 };

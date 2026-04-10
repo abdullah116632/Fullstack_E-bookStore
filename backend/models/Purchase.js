@@ -70,6 +70,10 @@ const purchaseSchema = new mongoose.Schema(
       enum: ['bkash', 'nagad', 'rocket', 'upay'],
       required: true,
     },
+    isChecked: {
+      type: Boolean,
+      default: false,
+    },
     paymentDetails: {
       senderMobileNumber: {
         type: String,

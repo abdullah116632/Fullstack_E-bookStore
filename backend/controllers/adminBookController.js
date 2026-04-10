@@ -1,4 +1,5 @@
 import Book from '../models/Book.js';
+import Publisher from '../models/Publisher.js';
 import { HTTP_STATUS } from '../config/constants.js';
 
 const ensureAdmin = (req, res) => {
@@ -16,15 +17,51 @@ export const getAllBooksForAdmin = async (req, res, next) => {
   try {
     if (!ensureAdmin(req, res)) return;
 
-    const books = await Book.find({})
+    const searchPublisher = String(req.query.searchPublisher || '').trim();
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, Math.min(Number.parseInt(req.query.limit, 10) || 50, 100));
+    const skip = (page - 1) * limit;
+    const filter = {};
+
+    if (searchPublisher) {
+      const matchingPublishers = await Publisher.find({
+        $or: [
+          { publisherName: { $regex: searchPublisher, $options: 'i' } },
+          { fullName: { $regex: searchPublisher, $options: 'i' } },
+          { email: { $regex: searchPublisher, $options: 'i' } },
+        ],
+      }).select('_id').lean();
+
+      const publisherIds = matchingPublishers.map((publisher) => publisher._id);
+      filter.publisher = { $in: publisherIds };
+    }
+
+    const total = await Book.countDocuments(filter);
+
+    const books = await Book.find(filter)
       .populate('publisher', 'publisherName fullName email')
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
 
     return res.status(HTTP_STATUS.OK).json({
       success: true,
       data: {
         books,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+        search: {
+          searchPublisher: searchPublisher || null,
+        },
       },
     });
   } catch (error) {

@@ -17,6 +17,7 @@ export default function Button({
     primary: 'bg-linear-to-r from-teal-600 via-cyan-600 to-sky-600 text-white shadow-lg shadow-cyan-600/20 hover:shadow-xl hover:shadow-cyan-500/35 hover:-translate-y-0.5 focus:ring-cyan-300',
     secondary: 'bg-white/95 text-slate-900 border border-slate-200 hover:bg-white hover:shadow-lg hover:shadow-slate-300/35 focus:ring-slate-200',
     outline: 'border-2 border-teal-500/75 text-teal-800 bg-white/60 backdrop-blur-sm hover:bg-teal-50 hover:border-teal-600 hover:shadow-md focus:ring-teal-200',
+    success: 'bg-green-600 text-white shadow-lg shadow-green-600/20 hover:bg-green-700 hover:shadow-xl hover:shadow-green-500/30 hover:-translate-y-0.5 focus:ring-green-300',
     danger: 'bg-linear-to-r from-rose-500 to-red-500 text-white shadow-lg shadow-rose-500/20 hover:shadow-xl hover:shadow-rose-500/35 hover:-translate-y-0.5 focus:ring-rose-300',
   };
 

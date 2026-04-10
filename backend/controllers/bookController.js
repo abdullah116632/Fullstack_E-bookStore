@@ -155,8 +155,8 @@ export const getPublicBookById = async (req, res, next) => {
 export const getBookPreviewPdf = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const requestedPages = Number(req.query.pages || 7);
-    const previewPagesLimit = Math.max(1, Math.min(requestedPages, 7));
+    const requestedPages = Number(req.query.pages || 10);
+    const previewPagesLimit = Math.max(1, Math.min(requestedPages, 10));
 
     const book = await Book.findById(id).select('title fileUrl filePublicId visibility');
     if (!book) {
