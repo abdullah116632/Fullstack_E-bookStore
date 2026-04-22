@@ -312,6 +312,22 @@ export default function PurchasePage() {
                     </ol>
                   </div>
 
+                  <div className="rounded-2xl border border-rose-300/55 bg-rose-500/14 p-5 text-rose-50 shadow-lg shadow-rose-900/25">
+                    <h3 className="text-sm font-bold tracking-wide text-rose-100">সহায়তা প্রয়োজন?</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-rose-50/95">
+                      কোনো সমস্যা মনে হলে সরাসরি আমাদের{' '}
+                      <a
+                        href="https://www.facebook.com/profile.php?id=61577502346618"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-white underline decoration-white/80 underline-offset-2 transition-colors hover:text-amber-200"
+                      >
+                        Facebook page
+                      </a>{' '}
+                      এ মেসেজ দিতে পারেন বা ইমেইল করতে পারেন।
+                    </p>
+                  </div>
+
                   <h2 className="text-2xl font-bold text-white">পেমেন্ট জমা দেওয়ার ফরম</h2>
 
                   <div>
