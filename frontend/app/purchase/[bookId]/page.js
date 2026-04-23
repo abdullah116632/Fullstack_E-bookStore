@@ -277,6 +277,10 @@ export default function PurchasePage() {
                   
 
                   <div className="space-y-3 rounded-2xl border border-cyan-300/45 bg-cyan-500/18 p-5 shadow-lg shadow-cyan-900/20 animate-pulse">
+                    <div className="rounded-xl border border-emerald-300/50 bg-emerald-500/12 p-4 text-center shadow-lg shadow-emerald-900/25">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100/95">বইয়ের মূল্য</p>
+                      <p className="mt-1.5 text-4xl font-extrabold text-white sm:text-5xl">৳{Number(book.price || 0).toFixed(2)}</p>
+                    </div>
                     <p className="text-xs font-semibold tracking-wider text-cyan-100">
                       আগে এই নম্বরে <span className="font-bold text-amber-300">সেন্ড মানি</span> করুন
                     </p>
