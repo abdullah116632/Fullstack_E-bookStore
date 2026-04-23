@@ -22,9 +22,10 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col bg-transparent text-slate-900">
+      <body suppressHydrationWarning className="min-h-full flex flex-col bg-transparent text-slate-900">
         <Providers>
           <FacebookPixel />
           {children}

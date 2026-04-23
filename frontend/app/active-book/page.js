@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { IoBook, IoArrowBack, IoEye } from 'react-icons/io5';
+import { IoBook, IoArrowBack, IoEye, IoDownloadOutline } from 'react-icons/io5';
 import Navbar from '@/components/common/Navbar';
 import Footer from '@/components/common/Footer';
 import AuthDrawer from '@/components/auth/AuthDrawer';
@@ -18,6 +18,7 @@ export default function ActiveBooksPage() {
   const { isAuthenticated, user, userType } = useSelector((state) => state.auth);
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [downloadingBookId, setDownloadingBookId] = useState('');
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false);
   const [authUserType, setAuthUserType] = useState('reader');
   const [authFormType, setAuthFormType] = useState('login');
@@ -152,6 +153,41 @@ export default function ActiveBooksPage() {
     }
 
     router.push(`/read/${book._id}`);
+  };
+
+  const handleDownloadBook = async (book) => {
+    if (!book?.isUnlocked) {
+      setShowVerifyModal(true);
+      return;
+    }
+
+    if (!book?._id) {
+      toast.error(text.fileUnavailable);
+      return;
+    }
+
+    try {
+      setDownloadingBookId(book._id);
+      toast.loading(t('myBooks.downloadingBook'), { id: `download-${book._id}` });
+
+      const response = await purchaseService.downloadUnlockedBookPdf(book._id);
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const objectUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = 'kagojer-samrajjo.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(objectUrl);
+
+      toast.success(t('myBooks.bookDownloaded'), { id: `download-${book._id}` });
+    } catch (error) {
+      toast.error(error.response?.data?.message || text.fileUnavailable, { id: `download-${book._id}` });
+    } finally {
+      setDownloadingBookId('');
+    }
   };
 
   const containerVariants = {
@@ -309,11 +345,21 @@ export default function ActiveBooksPage() {
                     <Button
                       variant="primary"
                       size="sm"
-                      className="w-full gap-1.5"
+                      className="w-1/2 gap-1.5"
                       onClick={() => handleReadBook(book)}
                     >
                       <IoEye className="text-sm" />
                       <span>{t('myBooks.read')}</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-1/2 gap-1.5"
+                      onClick={() => handleDownloadBook(book)}
+                      isLoading={downloadingBookId === book._id}
+                    >
+                      {downloadingBookId !== book._id && <IoDownloadOutline className="text-sm" />}
+                      <span>{t('myBooks.download')}</span>
                     </Button>
                   </div>
                 </div>
